@@ -33,9 +33,9 @@ const Home = () => {
         <div className="nav-container">
           <img src="/logo.png" alt="EduTrack Logo" className="logo" />
           <div className="nav-links">
-            <button onClick={() => setShowRegister(true)} className="login-link">
+            <Link to="/register" className="login-link">
               Inscription
-            </button>
+            </Link>
             <Link to="/login" className="nav-btn">Se connecter</Link>
           </div>
         </div>

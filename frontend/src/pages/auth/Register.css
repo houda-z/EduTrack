@@ -1,0 +1,18 @@
+/* Additional styles for glassmorphism if needed */
+.register-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-attachment: fixed;
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* For better select appearance on dark background */
+select option {
+    background-color: white;
+    color: #333;
+}
