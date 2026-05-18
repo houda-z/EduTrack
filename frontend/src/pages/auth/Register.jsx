@@ -58,8 +58,12 @@ const Register = () => {
 
       if (response.status === 201 || response.status === 200) {
         // Sauvegarder l'utilisateur pour le dashboard (Simulation)
-        localStorage.setItem('user', JSON.stringify({ name: prenom + ' ' + name }));
-        navigate('/dashboard-etudiant');
+        localStorage.setItem('user', JSON.stringify({ name: prenom + ' ' + name, role: formData.role }));
+        if (formData.role === 'etudiant') {
+          navigate('/etudiant/cours');
+        } else {
+          navigate('/admin/filieres');
+        }
       }
     } catch (err) {
       if (err.response && err.response.status === 422) {
@@ -142,12 +146,12 @@ const Register = () => {
               <label className="block text-sm mb-1 ml-1">Rôle</label>
               <select
                 name="role"
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white outline-none focus:border-white/50 transition-all [&>option]:text-gray-800"
+                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white outline-none focus:border-white/50 transition-all"
                 onChange={handleChange}
                 value={formData.role}
               >
-                <option value="etudiant">Étudiant</option>
-                <option value="enseignant">Formateur</option>
+                <option value="etudiant" style={{ color: 'black', backgroundColor: 'white' }}>Étudiant</option>
+                <option value="enseignant" style={{ color: 'black', backgroundColor: 'white' }}>Formateur</option>
               </select>
             </div>
             {formData.role === 'etudiant' && (
@@ -155,15 +159,15 @@ const Register = () => {
                 <label className="block text-sm mb-1 ml-1">Filière</label>
                 <select
                   name="filiere"
-                  className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white outline-none focus:border-white/50 transition-all [&>option]:text-gray-800"
+                  className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white outline-none focus:border-white/50 transition-all"
                   onChange={handleChange}
                   value={formData.filiere}
                   required={formData.role === 'etudiant'}
                 >
-                  <option value="">Choisir...</option>
-                  {filieres.map((f) => (
-                    <option key={f.id} value={f.nom}>{f.nom}</option>
-                  ))}
+                  <option value="" style={{ color: 'black', backgroundColor: 'white' }}>Choisir...</option>
+                  <option value="Full Stack 208" style={{ color: 'black', backgroundColor: 'white' }}>Full Stack 208</option>
+                  <option value="Développement Digital" style={{ color: 'black', backgroundColor: 'white' }}>Développement Digital</option>
+                  <option value="Réseaux et Sécurité" style={{ color: 'black', backgroundColor: 'white' }}>Réseaux et Sécurité</option>
                 </select>
               </div>
             )}

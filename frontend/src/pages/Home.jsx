@@ -51,10 +51,6 @@ const Home = () => {
             conçue pour les étudiants, les professeurs et l'administration.
           </p>
           <div className="hero-actions">
-            {/* التعديل هنا: استعملنا المسار /dashboard نيشان */}
-            <button onClick={() => navigate('/dashboard')} className="btn-primary">
-               Accéder au Dashboard
-            </button>
           </div>
         </div>
 
