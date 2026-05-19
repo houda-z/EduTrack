@@ -1,0 +1,211 @@
+<<<<<<< Updated upstream
+=======
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import './Register.css';
+
+const Register = () => {
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role: 'etudiant',
+    filiere: ''
+  });
+
+  const [filieres, setFilieres] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
+
+  // Récupérer la liste des filières depuis l'API
+  useEffect(() => {
+    const fetchFilieres = async () => {
+      try {
+        const response = await axios.get('http://127.0.0.1:8000/api/filieres');
+        setFilieres(response.data);
+      } catch (err) {
+        console.error('Erreur lors de la récupération des filières:', err);
+      }
+    };
+    fetchFilieres();
+  }, []);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrors({});
+
+    const nameParts = formData.fullName.trim().split(' ');
+    const prenom = nameParts[0] || '';
+    const name = nameParts.slice(1).join(' ') || '.';
+
+    try {
+      const response = await axios.post('http://127.0.0.1:8000/api/register', {
+        name: name,
+        prenom: prenom,
+        email: formData.email,
+        password: formData.password,
+        password_confirmation: formData.confirmPassword,
+        role: formData.role,
+        filiere: formData.role === 'etudiant' ? formData.filiere : null
+      });
+
+      if (response.status === 201 || response.status === 200) {
+        const { token, user } = response.data;
+
+        // Khzn token w user
+        localStorage.setItem('user_token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+
+        // Redirect selon role
+        if (formData.role === 'etudiant') {
+          const nom = (prenom + name).toLowerCase().replace(/\s+/g, '');
+          navigate(`/etudiant/${nom}/cours`);
+        } else if (formData.role === 'enseignant') {
+          navigate('/enseignant/dashboard');
+        } else {
+          navigate('/admin/dashboard');
+        }
+      }
+    } catch (err) {
+      if (err.response && err.response.status === 422) {
+        setErrors(err.response.data.errors);
+      } else {
+        alert("Erreur lors de l'inscription. Vérifiez votre connexion au backend.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  return (
+    <div className="register-container min-h-screen flex items-center justify-center p-4">
+      <div className="glass-card w-full max-w-md p-8 rounded-3xl shadow-2xl text-white">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold">EduTrack</h1>
+          <p className="text-blue-100">Créez votre compte</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm mb-1 ml-1">Nom complet</label>
+            <input
+              type="text"
+              name="fullName"
+              placeholder="Ex: Ahmed Alaoui"
+              className={`w-full px-4 py-3 rounded-xl bg-white/10 border ${errors.name || errors.prenom ? 'border-red-400' : 'border-white/20'} focus:border-white/50 outline-none transition-all placeholder:text-white/30`}
+              onChange={handleChange}
+              value={formData.fullName}
+              required
+            />
+            {errors.name && <p className="text-red-300 text-xs mt-1">{errors.name[0]}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm mb-1 ml-1">Email</label>
+            <input
+              type="email"
+              name="email"
+              placeholder="votre@email.com"
+              className={`w-full px-4 py-3 rounded-xl bg-white/10 border ${errors.email ? 'border-red-400' : 'border-white/20'} focus:border-white/50 outline-none transition-all placeholder:text-white/30`}
+              onChange={handleChange}
+              value={formData.email}
+              required
+            />
+            {errors.email && <p className="text-red-300 text-xs mt-1">{errors.email[0]}</p>}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm mb-1 ml-1">Mot de passe</label>
+              <input
+                type="password"
+                name="password"
+                placeholder="••••••••"
+                className={`w-full px-4 py-3 rounded-xl bg-white/10 border ${errors.password ? 'border-red-400' : 'border-white/20'} focus:border-white/50 outline-none transition-all placeholder:text-white/30`}
+                onChange={handleChange}
+                value={formData.password}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm mb-1 ml-1">Confirmation</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="••••••••"
+                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-white/50 outline-none transition-all placeholder:text-white/30"
+                onChange={handleChange}
+                value={formData.confirmPassword}
+                required
+              />
+            </div>
+          </div>
+          {errors.password && <p className="text-red-300 text-xs">{errors.password[0]}</p>}
+
+          <div className="col-span-2">
+
+            {formData.role === 'etudiant' && (
+              <div>
+                {formData.role === 'etudiant' && (
+                  <div>
+                    <label className="block text-sm mb-1 ml-1">Filière</label>
+                    <select
+                      name="filiere"
+                      className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white outline-none focus:border-white/50 transition-all"
+                      onChange={handleChange}
+                      value={formData.filiere}
+                      required={formData.role === 'etudiant'}
+                    >
+                      <option value="" style={{ color: 'black', backgroundColor: 'white' }}>Choisir...</option>
+                      {filieres.map(f => (
+                        <option key={f.id} value={f.nom} style={{ color: 'black', backgroundColor: 'white' }}>
+                          {f.nom}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-4 mt-2 bg-white text-blue-600 font-bold rounded-xl hover:bg-blue-50 transition-all transform hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:transform-none"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center">
+                <svg className="animate-spin h-5 w-5 mr-3 text-blue-600" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Inscription...
+              </span>
+            ) : "S'inscrire"}
+          </button>
+        </form>
+
+        <div className="mt-6 text-center text-sm">
+          <p className="text-blue-100">
+            Déjà inscrit ?{' '}
+            <Link to="/login" className="text-white font-bold hover:underline">
+              Se connecter
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Register;
+>>>>>>> Stashed changes
