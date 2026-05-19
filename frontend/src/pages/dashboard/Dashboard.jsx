@@ -18,7 +18,7 @@ const Dashboard = () => {
         const response = await api.get('/admin/stats').catch(() => ({
           data: { etudiants: 1250, professeurs: 45, examensActifs: 12, tauxReussite: 85 }
         }));
-        
+
         setStats(response.data);
       } catch (error) {
         console.error("Erreur lors de la récupération des statistiques", error);

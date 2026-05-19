@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Filiere extends Model
 {
+    protected $table = 'filieres';
+    public $timestamps = false;
+    
     protected $fillable = ['nom', 'description'];
-    public $timestamps = false; // The migration has created_at but not updated_at
 }

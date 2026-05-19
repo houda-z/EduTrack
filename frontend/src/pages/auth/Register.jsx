@@ -18,7 +18,6 @@ const Register = () => {
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
-  // Récupérer la liste des filières depuis l'API
   useEffect(() => {
     const fetchFilieres = async () => {
       try {
@@ -52,18 +51,16 @@ const Register = () => {
         email: formData.email,
         password: formData.password,
         password_confirmation: formData.confirmPassword,
-        role: formData.role,
-        filiere: formData.role === 'etudiant' ? formData.filiere : null
+        role: 'etudiant',
+        filiere: formData.filiere
       });
 
       if (response.status === 201 || response.status === 200) {
-        // Sauvegarder l'utilisateur pour le dashboard (Simulation)
-        localStorage.setItem('user', JSON.stringify({ name: prenom + ' ' + name, role: formData.role }));
-        if (formData.role === 'etudiant') {
-          navigate('/etudiant/cours');
-        } else {
-          navigate('/admin/filieres');
-        }
+        const { token, user } = response.data;
+        localStorage.setItem('user_token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        const nom = (prenom + name).toLowerCase().replace(/\s+/g, '');
+        navigate(`/etudiant/${nom}/cours`);
       }
     } catch (err) {
       if (err.response && err.response.status === 422) {
@@ -142,37 +139,36 @@ const Register = () => {
           {errors.password && <p className="text-red-300 text-xs">{errors.password[0]}</p>}
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm mb-1 ml-1">Rôle</label>
+            {/* Role — hidden, par défaut etudiant */}
+            <input type="hidden" name="role" value="etudiant" />
+
+            {/* Filières mn backend */}
+            <div className="col-span-2">
+              <label className="block text-sm mb-1 ml-1">Filière</label>
               <select
-                name="role"
+                name="filiere"
                 className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white outline-none focus:border-white/50 transition-all"
                 onChange={handleChange}
-                value={formData.role}
+                value={formData.filiere}
+                required
               >
-                <option value="etudiant" style={{ color: 'black', backgroundColor: 'white' }}>Étudiant</option>
-                <option value="enseignant" style={{ color: 'black', backgroundColor: 'white' }}>Formateur</option>
+                <option value="" style={{ color: 'black', backgroundColor: 'white' }}>
+                  Choisir votre filière...
+                </option>
+                {filieres.length > 0 ? (
+                  filieres.map(f => (
+                    <option key={f.id} value={f.id} style={{ color: 'black', backgroundColor: 'white' }}>
+                      {f.nom}
+                    </option>
+                  ))
+                ) : (
+                  <option disabled style={{ color: 'black', backgroundColor: 'white' }}>
+                    Chargement...
+                  </option>
+                )}
               </select>
             </div>
-            {formData.role === 'etudiant' && (
-              <div>
-                <label className="block text-sm mb-1 ml-1">Filière</label>
-                <select
-                  name="filiere"
-                  className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white outline-none focus:border-white/50 transition-all"
-                  onChange={handleChange}
-                  value={formData.filiere}
-                  required={formData.role === 'etudiant'}
-                >
-                  <option value="" style={{ color: 'black', backgroundColor: 'white' }}>Choisir...</option>
-                  <option value="Full Stack 208" style={{ color: 'black', backgroundColor: 'white' }}>Full Stack 208</option>
-                  <option value="Développement Digital" style={{ color: 'black', backgroundColor: 'white' }}>Développement Digital</option>
-                  <option value="Réseaux et Sécurité" style={{ color: 'black', backgroundColor: 'white' }}>Réseaux et Sécurité</option>
-                </select>
-              </div>
-            )}
           </div>
-
           <button
             type="submit"
             disabled={loading}

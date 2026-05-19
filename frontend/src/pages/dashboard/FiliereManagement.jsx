@@ -5,12 +5,12 @@ import { Plus, Edit2, Trash2, Search, X, Download, ChevronUp, ChevronDown, Chevr
 const FiliereManagement = () => {
   const [filieres, setFilieres] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
-  
+
   const [newFiliere, setNewFiliere] = useState({ name: '', status: 'Active' });
   const [toastMessage, setToastMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,7 +24,7 @@ const FiliereManagement = () => {
         // Décommenter pour utiliser la vraie API :
         // const response = await api.get('/filieres');
         // setFilieres(response.data);
-        
+
         // Données mockées enrichies
         setTimeout(() => {
           setFilieres([
@@ -51,7 +51,7 @@ const FiliereManagement = () => {
   // Search, Sort and Paginate logic (Real-time recalculation)
   const processedData = useMemo(() => {
     // 1. Search filter
-    let data = filieres.filter(filiere => 
+    let data = filieres.filter(filiere =>
       filiere.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       filiere.status.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -94,8 +94,8 @@ const FiliereManagement = () => {
 
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) return <div className="w-4 h-4 opacity-0 group-hover:opacity-30 transition-opacity"><ChevronUp size={16} /></div>;
-    return sortConfig.direction === 'asc' 
-      ? <ChevronUp size={16} className="text-cyan-400" /> 
+    return sortConfig.direction === 'asc'
+      ? <ChevronUp size={16} className="text-cyan-400" />
       : <ChevronDown size={16} className="text-cyan-400" />;
   };
 
@@ -105,7 +105,7 @@ const FiliereManagement = () => {
       headers.join(','),
       ...processedData.map(f => `${f.id},"${f.name}",${f.count},${f.status}`)
     ].join('\n');
-    
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -149,14 +149,14 @@ const FiliereManagement = () => {
           <p className="text-slate-400">Gérez les filières, les promotions et les statuts.</p>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-          <button 
+          <button
             onClick={exportCSV}
             className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white px-5 py-2.5 rounded-xl font-medium transition-all backdrop-blur-md"
           >
             <Download size={20} />
             <span>Exporter CSV</span>
           </button>
-          <button 
+          <button
             onClick={() => setIsAddModalOpen(true)}
             className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-400 hover:to-indigo-400 text-white px-5 py-2.5 rounded-xl font-medium shadow-[0_0_15px_rgba(34,211,238,0.3)] transition-all"
           >
@@ -170,9 +170,9 @@ const FiliereManagement = () => {
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-          <input 
-            type="text" 
-            placeholder="Rechercher une filière ou un statut..." 
+          <input
+            type="text"
+            placeholder="Rechercher une filière ou un statut..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
@@ -189,7 +189,7 @@ const FiliereManagement = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-white/5 border-b border-white/10">
-                <th 
+                <th
                   className="px-6 py-4 font-semibold text-slate-300 w-20 cursor-pointer group hover:bg-white/5 transition-colors select-none"
                   onClick={() => handleSort('id')}
                 >
@@ -197,7 +197,7 @@ const FiliereManagement = () => {
                     ID {getSortIcon('id')}
                   </div>
                 </th>
-                <th 
+                <th
                   className="px-6 py-4 font-semibold text-slate-300 cursor-pointer group hover:bg-white/5 transition-colors select-none"
                   onClick={() => handleSort('name')}
                 >
@@ -205,7 +205,7 @@ const FiliereManagement = () => {
                     Nom de la Filière {getSortIcon('name')}
                   </div>
                 </th>
-                <th 
+                <th
                   className="px-6 py-4 font-semibold text-slate-300 cursor-pointer group hover:bg-white/5 transition-colors select-none"
                   onClick={() => handleSort('count')}
                 >
@@ -259,12 +259,12 @@ const FiliereManagement = () => {
                       <button className="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors border border-blue-500/20" title="Modifier">
                         <Edit2 size={18} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => {
                           setItemToDelete(filiere);
                           setIsDeleteModalOpen(true);
                         }}
-                        className="p-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors border border-red-500/20" 
+                        className="p-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors border border-red-500/20"
                         title="Supprimer"
                       >
                         <Trash2 size={18} />
@@ -276,7 +276,7 @@ const FiliereManagement = () => {
             </tbody>
           </table>
         </div>
-        
+
         {/* Pagination Footer */}
         {!loading && totalPages > 1 && (
           <div className="px-6 py-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 bg-black/10">
@@ -284,31 +284,30 @@ const FiliereManagement = () => {
               Affichage de <span className="text-white font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> à <span className="text-white font-medium">{Math.min(currentPage * itemsPerPage, processedData.length)}</span> sur <span className="text-white font-medium">{processedData.length}</span>
             </div>
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
                 className="p-2 rounded-lg border border-white/10 text-slate-300 hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
               >
                 <ChevronLeft size={18} />
               </button>
-              
+
               <div className="flex items-center gap-1">
                 {[...Array(totalPages)].map((_, i) => (
                   <button
                     key={i}
                     onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${
-                      currentPage === i + 1 
-                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' 
+                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${currentPage === i + 1
+                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
                         : 'text-slate-400 hover:bg-white/5 border border-transparent'
-                    }`}
+                      }`}
                   >
                     {i + 1}
                   </button>
                 ))}
               </div>
 
-              <button 
+              <button
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
                 className="p-2 rounded-lg border border-white/10 text-slate-300 hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
@@ -333,19 +332,19 @@ const FiliereManagement = () => {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">Nom de la filière</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={newFiliere.name}
-                  onChange={(e) => setNewFiliere({...newFiliere, name: e.target.value})}
-                  placeholder="Ex: Développement Digital" 
+                  onChange={(e) => setNewFiliere({ ...newFiliere, name: e.target.value })}
+                  placeholder="Ex: Développement Digital"
                   className="w-full bg-black/20 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-cyan-500/50 transition-all"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1">Statut initial</label>
-                <select 
+                <select
                   value={newFiliere.status}
-                  onChange={(e) => setNewFiliere({...newFiliere, status: e.target.value})}
+                  onChange={(e) => setNewFiliere({ ...newFiliere, status: e.target.value })}
                   className="w-full bg-black/20 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-cyan-500/50 transition-all appearance-none"
                 >
                   <option value="Active">Active</option>
@@ -354,13 +353,13 @@ const FiliereManagement = () => {
               </div>
             </div>
             <div className="p-6 border-t border-white/10 bg-white/5 flex justify-end gap-3">
-              <button 
+              <button
                 onClick={closeAddModal}
                 className="px-4 py-2 rounded-xl font-medium text-slate-300 hover:bg-white/10 transition-colors"
               >
                 Annuler
               </button>
-              <button 
+              <button
                 className="px-4 py-2 rounded-xl font-medium bg-cyan-500 hover:bg-cyan-400 text-slate-900 transition-colors"
                 onClick={handleSaveAdd}
               >
@@ -381,18 +380,18 @@ const FiliereManagement = () => {
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Êtes-vous sûr ?</h3>
               <p className="text-slate-400 mb-8 leading-relaxed">
-                Voulez-vous vraiment supprimer la filière <br/>
-                <span className="text-white font-semibold">"{itemToDelete?.name}"</span> ? <br/>
+                Voulez-vous vraiment supprimer la filière <br />
+                <span className="text-white font-semibold">"{itemToDelete?.name}"</span> ? <br />
                 Cette action est irréversible.
               </p>
               <div className="flex gap-3 justify-center">
-                <button 
+                <button
                   onClick={() => setIsDeleteModalOpen(false)}
                   className="flex-1 px-4 py-2.5 rounded-xl font-medium text-slate-300 hover:bg-white/10 border border-white/10 transition-colors"
                 >
                   Annuler
                 </button>
-                <button 
+                <button
                   onClick={confirmDelete}
                   className="flex-1 px-4 py-2.5 rounded-xl font-medium bg-red-500 hover:bg-red-400 text-white shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-colors"
                 >

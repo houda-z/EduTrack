@@ -11,7 +11,7 @@ const FILIERES_LIST = [
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -38,7 +38,7 @@ const UserManagement = () => {
         // Décommenter pour utiliser la vraie API :
         // const response = await api.get('/users');
         // setUsers(response.data);
-        
+
         // Mock data diverse
         setTimeout(() => {
           setUsers([
@@ -63,7 +63,7 @@ const UserManagement = () => {
   // Search, Sort and Paginate logic
   const processedData = useMemo(() => {
     // 1. Search filter
-    let data = users.filter(user => 
+    let data = users.filter(user =>
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -105,8 +105,8 @@ const UserManagement = () => {
 
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) return <div className="w-4 h-4 opacity-0 group-hover:opacity-30 transition-opacity"><ChevronUp size={16} /></div>;
-    return sortConfig.direction === 'asc' 
-      ? <ChevronUp size={16} className="text-cyan-400" /> 
+    return sortConfig.direction === 'asc'
+      ? <ChevronUp size={16} className="text-cyan-400" />
       : <ChevronDown size={16} className="text-cyan-400" />;
   };
 
@@ -138,7 +138,7 @@ const UserManagement = () => {
   };
 
   const renderRoleBadge = (role) => {
-    switch(role) {
+    switch (role) {
       case 'Admin':
         return (
           <span className="inline-flex items-center gap-1.5 bg-yellow-500/10 text-yellow-400 py-1 px-3 rounded-full text-sm font-medium border border-yellow-500/20">
@@ -171,7 +171,7 @@ const UserManagement = () => {
           <h2 className="text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Gestion des Utilisateurs</h2>
           <p className="text-slate-400">Gérez les accès, les rôles et les comptes étudiants.</p>
         </div>
-        <button 
+        <button
           onClick={() => setIsAddModalOpen(true)}
           className="w-full md:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-indigo-500 hover:from-cyan-400 hover:to-indigo-400 text-white px-5 py-2.5 rounded-xl font-medium shadow-[0_0_15px_rgba(34,211,238,0.3)] transition-all"
         >
@@ -184,9 +184,9 @@ const UserManagement = () => {
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-          <input 
-            type="text" 
-            placeholder="Rechercher par nom, email ou rôle..." 
+          <input
+            type="text"
+            placeholder="Rechercher par nom, email ou rôle..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
@@ -203,7 +203,7 @@ const UserManagement = () => {
           <table className="w-full text-left border-collapse whitespace-nowrap">
             <thead>
               <tr className="bg-white/5 border-b border-white/10">
-                <th 
+                <th
                   className="px-6 py-4 font-semibold text-slate-300 cursor-pointer group hover:bg-white/5 transition-colors select-none"
                   onClick={() => handleSort('name')}
                 >
@@ -211,7 +211,7 @@ const UserManagement = () => {
                     Utilisateur {getSortIcon('name')}
                   </div>
                 </th>
-                <th 
+                <th
                   className="px-6 py-4 font-semibold text-slate-300 cursor-pointer group hover:bg-white/5 transition-colors select-none"
                   onClick={() => handleSort('role')}
                 >
@@ -219,7 +219,7 @@ const UserManagement = () => {
                     Rôle {getSortIcon('role')}
                   </div>
                 </th>
-                <th 
+                <th
                   className="px-6 py-4 font-semibold text-slate-300 cursor-pointer group hover:bg-white/5 transition-colors select-none"
                   onClick={() => handleSort('filiere')}
                 >
@@ -264,12 +264,12 @@ const UserManagement = () => {
                         <button className="p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors border border-blue-500/20" title="Modifier">
                           <Edit2 size={18} />
                         </button>
-                        <button 
+                        <button
                           onClick={() => {
                             setItemToDelete(user);
                             setIsDeleteModalOpen(true);
                           }}
-                          className="p-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors border border-red-500/20" 
+                          className="p-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors border border-red-500/20"
                           title="Supprimer"
                         >
                           <Trash2 size={18} />
@@ -282,7 +282,7 @@ const UserManagement = () => {
             </tbody>
           </table>
         </div>
-        
+
         {/* Pagination */}
         {!loading && totalPages > 1 && (
           <div className="px-6 py-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 bg-black/10">
@@ -290,31 +290,30 @@ const UserManagement = () => {
               Affichage de <span className="text-white font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> à <span className="text-white font-medium">{Math.min(currentPage * itemsPerPage, processedData.length)}</span> sur <span className="text-white font-medium">{processedData.length}</span>
             </div>
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
                 className="p-2 rounded-lg border border-white/10 text-slate-300 hover:bg-white/5 disabled:opacity-30 transition-all"
               >
                 <ChevronLeft size={18} />
               </button>
-              
+
               <div className="flex items-center gap-1">
                 {[...Array(totalPages)].map((_, i) => (
                   <button
                     key={i}
                     onClick={() => setCurrentPage(i + 1)}
-                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${
-                      currentPage === i + 1 
-                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' 
+                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-all ${currentPage === i + 1
+                        ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
                         : 'text-slate-400 hover:bg-white/5 border border-transparent'
-                    }`}
+                      }`}
                   >
                     {i + 1}
                   </button>
                 ))}
               </div>
 
-              <button 
+              <button
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
                 className="p-2 rounded-lg border border-white/10 text-slate-300 hover:bg-white/5 disabled:opacity-30 transition-all"
@@ -336,49 +335,49 @@ const UserManagement = () => {
                 <X size={24} />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-slate-300 mb-1">Nom complet</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={newUser.name}
-                    onChange={(e) => setNewUser({...newUser, name: e.target.value})}
-                    placeholder="Ex: John Doe" 
+                    onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                    placeholder="Ex: John Doe"
                     className="w-full bg-black/20 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-cyan-500/50 transition-all"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-1">Email</label>
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     value={newUser.email}
-                    onChange={(e) => setNewUser({...newUser, email: e.target.value})}
-                    placeholder="john@edutrack.ma" 
+                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                    placeholder="john@edutrack.ma"
                     className="w-full bg-black/20 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-cyan-500/50 transition-all"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-1">Mot de passe</label>
-                  <input 
-                    type="password" 
+                  <input
+                    type="password"
                     value={newUser.password}
-                    onChange={(e) => setNewUser({...newUser, password: e.target.value})}
-                    placeholder="••••••••" 
+                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                    placeholder="••••••••"
                     className="w-full bg-black/20 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-cyan-500/50 transition-all"
                   />
                 </div>
-                
+
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-slate-300 mb-1">Rôle</label>
-                  <select 
+                  <select
                     value={newUser.role}
                     onChange={(e) => {
                       const newRole = e.target.value;
-                      setNewUser({...newUser, role: newRole, filiere: newRole === 'Étudiant' ? newUser.filiere : ''});
+                      setNewUser({ ...newUser, role: newRole, filiere: newRole === 'Étudiant' ? newUser.filiere : '' });
                     }}
                     className="w-full bg-black/20 border border-white/10 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-cyan-500/50 transition-all appearance-none"
                   >
@@ -388,30 +387,30 @@ const UserManagement = () => {
                   </select>
                 </div>
 
-                  <div className="md:col-span-2">
-                    <label style={{color: 'yellow'}}>--- FILIERE TEST FIELD ---</label>
-                    <select 
-                      value={newUser.filiere}
-                      onChange={(e) => setNewUser({...newUser, filiere: e.target.value})}
-                      style={{color: 'black', backgroundColor: 'white', display: 'block', width: '100%', padding: '10px', marginTop: '10px'}}
-                    >
-                      <option value="" style={{ color: 'black', backgroundColor: 'white' }}>-- Test: Data Loading... --</option>
-                      <option value="1" style={{ color: 'black', backgroundColor: 'white' }}>Full Stack 208</option>
-                      <option value="2" style={{ color: 'black', backgroundColor: 'white' }}>Développement Digital</option>
-                      <option value="3" style={{ color: 'black', backgroundColor: 'white' }}>Réseaux et Sécurité</option>
-                    </select>
-                  </div>
+                <div className="md:col-span-2">
+                  <label style={{ color: 'yellow' }}>--- FILIERE TEST FIELD ---</label>
+                  <select
+                    value={newUser.filiere}
+                    onChange={(e) => setNewUser({ ...newUser, filiere: e.target.value })}
+                    style={{ color: 'black', backgroundColor: 'white', display: 'block', width: '100%', padding: '10px', marginTop: '10px' }}
+                  >
+                    <option value="" style={{ color: 'black', backgroundColor: 'white' }}>-- Test: Data Loading... --</option>
+                    <option value="1" style={{ color: 'black', backgroundColor: 'white' }}>Full Stack 208</option>
+                    <option value="2" style={{ color: 'black', backgroundColor: 'white' }}>Développement Digital</option>
+                    <option value="3" style={{ color: 'black', backgroundColor: 'white' }}>Réseaux et Sécurité</option>
+                  </select>
+                </div>
               </div>
             </div>
 
             <div className="p-6 border-t border-white/10 bg-white/5 flex justify-end gap-3">
-              <button 
+              <button
                 onClick={closeAddModal}
                 className="px-4 py-2 rounded-xl font-medium text-slate-300 hover:bg-white/10 transition-colors"
               >
                 Annuler
               </button>
-              <button 
+              <button
                 className="px-4 py-2 rounded-xl font-medium bg-cyan-500 hover:bg-cyan-400 text-slate-900 transition-colors"
                 onClick={handleSaveAdd}
               >
@@ -432,18 +431,18 @@ const UserManagement = () => {
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Êtes-vous sûr ?</h3>
               <p className="text-slate-400 mb-8 leading-relaxed">
-                Voulez-vous vraiment supprimer l'utilisateur <br/>
-                <span className="text-white font-semibold">"{itemToDelete?.name}"</span> ? <br/>
+                Voulez-vous vraiment supprimer l'utilisateur <br />
+                <span className="text-white font-semibold">"{itemToDelete?.name}"</span> ? <br />
                 Cette action est irréversible.
               </p>
               <div className="flex gap-3 justify-center">
-                <button 
+                <button
                   onClick={() => setIsDeleteModalOpen(false)}
                   className="flex-1 px-4 py-2.5 rounded-xl font-medium text-slate-300 hover:bg-white/10 border border-white/10 transition-colors"
                 >
                   Annuler
                 </button>
-                <button 
+                <button
                   onClick={confirmDelete}
                   className="flex-1 px-4 py-2.5 rounded-xl font-medium bg-red-500 hover:bg-red-400 text-white shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-colors"
                 >

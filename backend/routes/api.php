@@ -1,11 +1,12 @@
 <?php
-
-use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\FiliereController;
-use App\Http\Controllers\CourseController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\FiliereController;
+use App\Http\Controllers\Auth\AuthController;
 
-Route::post('/register', [RegisteredUserController::class, 'store']);
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login',    [AuthController::class, 'login']);
 Route::get('/filieres', [FiliereController::class, 'index']);
-Route::get('/cours', [CourseController::class, 'index']);
-Route::get('/cours/filiere/{id}', [CourseController::class, 'byFiliere']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user',    [AuthController::class, 'me']);
+});

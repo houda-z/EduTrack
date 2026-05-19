@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Filiere;
 use Illuminate\Http\Request;
+use App\Models\Filiere;
 
 class FiliereController extends Controller
 {

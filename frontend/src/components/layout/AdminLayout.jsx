@@ -17,14 +17,14 @@ const AdminLayout = () => {
 
   return (
     <div className="min-h-screen bg-[#0f172a] bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white font-sans flex relative overflow-hidden">
-      
+
       {/* Decorative background glow elements */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/20 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none"></div>
 
       {/* Sidebar Mobile Toggle */}
-      <button 
-        onClick={toggleSidebar} 
+      <button
+        onClick={toggleSidebar}
         className="md:hidden fixed top-4 left-4 z-50 p-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-lg shadow-lg"
       >
         {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
@@ -42,7 +42,7 @@ const AdminLayout = () => {
         <nav className="flex-1 p-4 space-y-2">
           {navLinks.map((link) => {
             // Using end matching for /dashboard so it doesn't match /dashboard/filieres
-            const isActive = link.path === '/dashboard' 
+            const isActive = link.path === '/dashboard'
               ? location.pathname === '/dashboard'
               : location.pathname.startsWith(link.path);
 
@@ -50,11 +50,10 @@ const AdminLayout = () => {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${
-                  isActive 
-                    ? 'bg-gradient-to-r from-cyan-500/20 to-indigo-500/10 text-cyan-300 border border-cyan-500/30 shadow-[0_0_10px_rgba(34,211,238,0.1)]' 
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all group ${isActive
+                    ? 'bg-gradient-to-r from-cyan-500/20 to-indigo-500/10 text-cyan-300 border border-cyan-500/30 shadow-[0_0_10px_rgba(34,211,238,0.1)]'
                     : 'text-slate-300 hover:bg-white/5 hover:text-white border border-transparent'
-                }`}
+                  }`}
                 onClick={() => setIsSidebarOpen(false)}
               >
                 <div className={isActive ? 'text-cyan-400' : 'group-hover:text-cyan-400 transition-colors'}>

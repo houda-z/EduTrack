@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { 
-  LayoutDashboard, 
-  BookOpen, 
-  GraduationCap, 
-  User, 
-  LogOut, 
-  Search, 
+import {
+  LayoutDashboard,
+  BookOpen,
+  GraduationCap,
+  User,
+  LogOut,
+  Search,
   Bell,
   ChevronRight,
   Clock,
@@ -52,7 +52,7 @@ const DashboardEtudiant = () => {
           <div className="logo-box">ET</div>
           <h2>EduTrack</h2>
         </div>
-        
+
         <nav className="sidebar-nav">
           <a href="#home" className="nav-item active">
             <LayoutDashboard size={20} />
