@@ -1,5 +1,3 @@
-<<<<<<< Updated upstream
-=======
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
@@ -28,21 +26,9 @@ const Login = () => {
 
       const { token, user } = response.data;
 
-      // Khzn token w user f localStorage
       localStorage.setItem('user_token', token);
       localStorage.setItem('user', JSON.stringify(user));
 
-      // Redirect selon role
-      // Bdl:
-      if (user.role === 'admin') {
-        navigate('/admin/dashboard');
-      } else if (user.role === 'enseignant') {
-        navigate('/enseignant/dashboard');
-      } else {
-        navigate('/etudiant/cours');
-      }
-
-      // Bihad:
       if (user.role === 'admin') {
         navigate('/admin/dashboard');
       } else if (user.role === 'enseignant') {
@@ -71,32 +57,20 @@ const Login = () => {
           <h2>Portail EduTrack</h2>
           <p>Identifiez-vous pour continuer</p>
         </div>
-
         <form onSubmit={handleSubmit} className="login-form">
           <div className="field">
             <label>Adresse Email</label>
-            <input
-              type="email"
-              name="email"
-              onChange={handleChange}
-              required
-            />
+            <input type="email" name="email" onChange={handleChange} required />
           </div>
           <div className="field">
             <label>Mot de passe</label>
-            <input
-              type="password"
-              name="password"
-              onChange={handleChange}
-              required
-            />
+            <input type="password" name="password" onChange={handleChange} required />
           </div>
           {error && <p style={{ color: 'red', fontSize: '14px' }}>{error}</p>}
           <button type="submit" className="btn-submit" disabled={loading}>
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
         </form>
-
         <div className="login-foot">
           <p>Problème de connexion? <span>Contacter le support</span></p>
         </div>
@@ -106,4 +80,3 @@ const Login = () => {
 };
 
 export default Login;
->>>>>>> Stashed changes

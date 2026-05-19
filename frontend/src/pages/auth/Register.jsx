@@ -1,5 +1,3 @@
-<<<<<<< Updated upstream
-=======
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -20,7 +18,6 @@ const Register = () => {
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
-  // Récupérer la liste des filières depuis l'API
   useEffect(() => {
     const fetchFilieres = async () => {
       try {
@@ -54,26 +51,16 @@ const Register = () => {
         email: formData.email,
         password: formData.password,
         password_confirmation: formData.confirmPassword,
-        role: formData.role,
-        filiere: formData.role === 'etudiant' ? formData.filiere : null
+        role: 'etudiant',
+        filiere: formData.filiere
       });
 
       if (response.status === 201 || response.status === 200) {
         const { token, user } = response.data;
-
-        // Khzn token w user
         localStorage.setItem('user_token', token);
         localStorage.setItem('user', JSON.stringify(user));
-
-        // Redirect selon role
-        if (formData.role === 'etudiant') {
-          const nom = (prenom + name).toLowerCase().replace(/\s+/g, '');
-          navigate(`/etudiant/${nom}/cours`);
-        } else if (formData.role === 'enseignant') {
-          navigate('/enseignant/dashboard');
-        } else {
-          navigate('/admin/dashboard');
-        }
+        const nom = (prenom + name).toLowerCase().replace(/\s+/g, '');
+        navigate(`/etudiant/${nom}/cours`);
       }
     } catch (err) {
       if (err.response && err.response.status === 422) {
@@ -85,6 +72,7 @@ const Register = () => {
       setLoading(false);
     }
   };
+
   return (
     <div className="register-container min-h-screen flex items-center justify-center p-4">
       <div className="glass-card w-full max-w-md p-8 rounded-3xl shadow-2xl text-white">
@@ -150,33 +138,37 @@ const Register = () => {
           </div>
           {errors.password && <p className="text-red-300 text-xs">{errors.password[0]}</p>}
 
-          <div className="col-span-2">
+          <div className="grid grid-cols-2 gap-4">
+            {/* Role — hidden, par défaut etudiant */}
+            <input type="hidden" name="role" value="etudiant" />
 
-            {formData.role === 'etudiant' && (
-              <div>
-                {formData.role === 'etudiant' && (
-                  <div>
-                    <label className="block text-sm mb-1 ml-1">Filière</label>
-                    <select
-                      name="filiere"
-                      className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white outline-none focus:border-white/50 transition-all"
-                      onChange={handleChange}
-                      value={formData.filiere}
-                      required={formData.role === 'etudiant'}
-                    >
-                      <option value="" style={{ color: 'black', backgroundColor: 'white' }}>Choisir...</option>
-                      {filieres.map(f => (
-                        <option key={f.id} value={f.nom} style={{ color: 'black', backgroundColor: 'white' }}>
-                          {f.nom}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+            {/* Filières mn backend */}
+            <div className="col-span-2">
+              <label className="block text-sm mb-1 ml-1">Filière</label>
+              <select
+                name="filiere"
+                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white outline-none focus:border-white/50 transition-all"
+                onChange={handleChange}
+                value={formData.filiere}
+                required
+              >
+                <option value="" style={{ color: 'black', backgroundColor: 'white' }}>
+                  Choisir votre filière...
+                </option>
+                {filieres.length > 0 ? (
+                  filieres.map(f => (
+                    <option key={f.id} value={f.id} style={{ color: 'black', backgroundColor: 'white' }}>
+                      {f.nom}
+                    </option>
+                  ))
+                ) : (
+                  <option disabled style={{ color: 'black', backgroundColor: 'white' }}>
+                    Chargement...
+                  </option>
                 )}
-              </div>
-            )}
+              </select>
+            </div>
           </div>
-
           <button
             type="submit"
             disabled={loading}
@@ -208,4 +200,3 @@ const Register = () => {
 };
 
 export default Register;
->>>>>>> Stashed changes
