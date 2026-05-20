@@ -1,0 +1,191 @@
+.profile-container {
+    padding: 20px;
+    animation: fadeIn 0.8s ease-out;
+}
+
+.profile-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.glass-glow {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 30px;
+    padding: 30px;
+    margin-bottom: 25px;
+}
+
+.avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.avatar-wrapper {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin-bottom: 20px;
+}
+
+.avatar-wrapper img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid #22d3ee;
+    padding: 5px;
+    background: rgba(34, 211, 238, 0.1);
+}
+
+.edit-avatar-btn {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background: #8b5cf6;
+    color: white;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+}
+
+.profile-badge {
+    background: rgba(34, 211, 238, 0.1);
+    color: #22d3ee;
+    padding: 5px 15px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-top: 10px;
+}
+
+.profile-quick-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 30px;
+    padding: 20px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.q-stat {
+    text-align: center;
+}
+
+.q-val {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #22d3ee;
+}
+
+.q-lab {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+.btn-primary-scifi {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #8b5cf6, #22d3ee);
+    border: none;
+    border-radius: 15px;
+    color: #fff;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-primary-scifi:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 30px rgba(34, 211, 238, 0.3);
+}
+
+.academic-card h3, .info-section h3, .skills-section h3 {
+    font-size: 1rem;
+    color: #94a3b8;
+    margin-bottom: 25px;
+    letter-spacing: 1px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.detail-item label {
+    display: block;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.detail-item span {
+    color: #fff;
+    font-weight: 600;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.info-field {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.field-icon {
+    color: #8b5cf6;
+    margin-top: 5px;
+}
+
+.info-field label {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-bottom: 5px;
+}
+
+.info-field p {
+    color: #fff;
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+.skills-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.skill-tag {
+    padding: 8px 18px;
+    background: rgba(34, 211, 238, 0.05);
+    border: 1px solid rgba(34, 211, 238, 0.2);
+    border-radius: 12px;
+    color: #22d3ee;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.text-cyan { color: #22d3ee; }
+.text-purple { color: #8b5cf6; }
