@@ -1,0 +1,194 @@
+.schedule-container {
+    padding: 20px;
+    animation: fadeIn 0.8s ease-out;
+}
+
+.calendar-controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: rgba(30, 41, 59, 0.5);
+    padding: 10px 20px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.current-week {
+    font-weight: 600;
+    color: #fff;
+    min-width: 250px;
+    text-align: center;
+}
+
+.ctrl-btn {
+    background: none;
+    border: none;
+    color: #22d3ee;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+
+.ctrl-btn:hover {
+    background: rgba(34, 211, 238, 0.1);
+}
+
+.schedule-grid-wrapper {
+    background: rgba(15, 23, 42, 0.4);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+    margin-top: 30px;
+}
+
+.schedule-header-row {
+    display: grid;
+    grid-template-columns: 120px repeat(6, 1fr);
+    background: rgba(30, 41, 59, 0.8);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.time-column-header, .day-column-header {
+    padding: 20px;
+    text-align: center;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+.day-column-header {
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.schedule-row {
+    display: grid;
+    grid-template-columns: 120px repeat(6, 1fr);
+    min-height: 120px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.time-slot-label {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #64748b;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    background: rgba(30, 41, 59, 0.2);
+}
+
+.schedule-cell {
+    padding: 10px;
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+}
+
+.session-card {
+    height: 100%;
+    border-radius: 12px;
+    padding: 15px;
+    position: relative;
+    overflow: hidden;
+    transition: 0.3s;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.session-card:hover {
+    transform: scale(1.02);
+    z-index: 10;
+}
+
+.session-card.cyan {
+    background: rgba(34, 211, 238, 0.1);
+    border: 1px solid rgba(34, 211, 238, 0.3);
+}
+
+.session-card.purple {
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.session-card.blue {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.session-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+}
+
+.cyan .session-glow { background: #22d3ee; box-shadow: 0 0 10px #22d3ee; }
+.purple .session-glow { background: #8b5cf6; box-shadow: 0 0 10px #8b5cf6; }
+.blue .session-glow { background: #3b82f6; box-shadow: 0 0 10px #3b82f6; }
+
+.session-card h4 {
+    color: #fff;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.session-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.room, .teacher {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.empty-slot {
+    height: 100%;
+    width: 100%;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+
+.empty-slot:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.schedule-legend {
+    display: flex;
+    gap: 30px;
+    margin-top: 30px;
+    justify-content: center;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #94a3b8;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.dot.cyan { background: #22d3ee; box-shadow: 0 0 5px #22d3ee; }
+.dot.purple { background: #8b5cf6; box-shadow: 0 0 5px #8b5cf6; }
+.dot.blue { background: #3b82f6; box-shadow: 0 0 5px #3b82f6; }
