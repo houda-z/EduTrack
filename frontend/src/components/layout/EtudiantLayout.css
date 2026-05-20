@@ -9,13 +9,13 @@
 
 /* Sidebar Styling */
 .sidebar {
-    width: 280px;
+    width: 240px;
     background: rgba(15, 23, 42, 0.6);
     backdrop-filter: blur(25px);
     border-right: 1px solid rgba(34, 211, 238, 0.1);
     display: flex;
     flex-direction: column;
-    padding: 30px;
+    padding: 20px;
     height: 100vh;
     position: sticky;
     top: 0;
@@ -33,8 +33,8 @@
 .sidebar-header {
     display: flex;
     align-items: center;
-    gap: 15px;
-    margin-bottom: 50px;
+    gap: 12px;
+    margin-bottom: 30px;
 }
 
 .logo-box {
@@ -50,9 +50,9 @@
 }
 
 .brand-name {
-    font-size: 1.6rem;
+    font-size: 1.3rem;
     font-weight: 800;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
 }
 
 .text-cyan { color: #22d3ee; }
@@ -67,9 +67,9 @@
 .nav-item {
     display: flex;
     align-items: center;
-    gap: 15px;
-    padding: 14px 20px;
-    border-radius: 16px;
+    gap: 12px;
+    padding: 10px 15px;
+    border-radius: 12px;
     color: #94a3b8;
     text-decoration: none;
     transition: 0.3s ease;
@@ -138,7 +138,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 30px;
+    padding: 20px;
     position: relative;
 }
 
@@ -146,7 +146,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 .top-bar-left {
@@ -172,12 +172,12 @@
 .search-box-stu {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     background: rgba(15, 23, 42, 0.5);
-    padding: 10px 20px;
-    border-radius: 14px;
+    padding: 8px 15px;
+    border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.05);
-    width: 400px;
+    width: 320px;
 }
 
 .search-box-stu input {
@@ -248,8 +248,8 @@
     background: rgba(15, 23, 42, 0.4);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 30px;
-    padding: 30px;
+    border-radius: 20px;
+    padding: 20px;
     overflow-y: auto;
 }
 
