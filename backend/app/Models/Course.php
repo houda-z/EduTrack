@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Course extends Model
 {
+    protected $table = 'cours';
     protected $fillable = ['titre', 'contenu', 'fichier_url', 'enseignant_id', 'filiere_id'];
 
     public function filiere()
