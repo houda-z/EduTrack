@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Calendar, 
-  PlusCircle, 
-  Clock, 
-  MapPin, 
-  Trash2, 
-  Edit3, 
-  X, 
-  Plus, 
-  BookOpen, 
-  ClipboardList, 
-  Sliders 
+import {
+  Calendar,
+  PlusCircle,
+  Clock,
+  MapPin,
+  Trash2,
+  Edit3,
+  X,
+  Plus,
+  BookOpen,
+  ClipboardList,
+  Sliders
 } from 'lucide-react';
 import api from '../../services/api';
 
@@ -19,7 +19,7 @@ const EmploiDuTemps = () => {
   const [groupes, setGroupes] = useState([]);
   const [selectedFiliereId, setSelectedFiliereId] = useState('');
   const [selectedGroupeId, setSelectedGroupeId] = useState('');
-  
+
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -97,13 +97,9 @@ const EmploiDuTemps = () => {
         setSessions(res.data.data);
       }
     } catch (err) {
-      console.warn("API schedule fetch failure, using mock fallback:", err);
-      setError("Connexion API impossible. Affichage des données fictives.");
-      setSessions([
-        { id: 1, formateur_id: 1, groupe_id: parseInt(selectedGroupeId), titre: "React & Next.js", jour: "lundi", heure_debut: "08:30:00", heure_fin: "11:00:00", salle: "Lab 4", type: "cours" },
-        { id: 2, formateur_id: 1, groupe_id: parseInt(selectedGroupeId), titre: "Examen Algorithmes", jour: "mardi", heure_debut: "14:00:00", heure_fin: "16:00:00", salle: "Amphi A", type: "exam" },
-        { id: 3, formateur_id: 1, groupe_id: parseInt(selectedGroupeId), titre: "TP Docker containers", jour: "jeudi", heure_debut: "10:00:00", heure_fin: "13:00:00", salle: "Lab 2", type: "tp" },
-      ]);
+      console.error("API schedule fetch error:", err);
+      setError("Erreur lors du chargement de l'emploi du temps.");
+      setSessions([]);
     } finally {
       setLoading(false);
     }
@@ -121,12 +117,15 @@ const EmploiDuTemps = () => {
       return;
     }
 
+    const normalizedHeureDebut = heureDebut.substring(0, 5);
+    const normalizedHeureFin = heureFin.substring(0, 5);
+
     const payload = {
       groupe_id: parseInt(selectedGroupeId),
       titre,
       jour,
-      heure_debut: heureDebut,
-      heure_fin: heureFin,
+      heure_debut: normalizedHeureDebut,
+      heure_fin: normalizedHeureFin,
       salle,
       type: typeSession
     };
@@ -150,19 +149,8 @@ const EmploiDuTemps = () => {
         }
       }
     } catch (err) {
-      console.warn("API Session save error, simulated updates in local state:", err);
-      if (editingSession) {
-        setSessions(prev => prev.map(s => s.id === editingSession.id ? { ...s, ...payload } : s));
-      } else {
-        const mockNew = {
-          id: Math.floor(Math.random() * 1000),
-          formateur_id: 1,
-          ...payload
-        };
-        setSessions(prev => [...prev, mockNew]);
-      }
-      setIsModalOpen(false);
-      alert("Enregistré (simulation locale).");
+      console.error("API Session save error:", err);
+      setError("Erreur lors de l'enregistrement de la session.");
     }
   };
 
@@ -172,8 +160,8 @@ const EmploiDuTemps = () => {
       await api.delete(`/emploi-du-temps/${id}`);
       fetchSchedule();
     } catch (err) {
-      setSessions(prev => prev.filter(s => s.id !== id));
-      alert("Session supprimée.");
+      console.error("API delete session error:", err);
+      alert("Erreur lors de la suppression de la session.");
     }
   };
 
@@ -188,17 +176,15 @@ const EmploiDuTemps = () => {
     setIsModalOpen(true);
   };
 
+  const formatTime = (timeStr) => {
+    if (!timeStr) return '08:00';
+    return timeStr.slice(0, 5);
+  };
+
   const handleOpenEditModal = (session) => {
     setEditingSession(session);
     setTitre(session.titre);
     setJour(session.jour);
-    
-    // helper to extract HH:MM
-    const formatTime = (timeStr) => {
-      if (!timeStr) return '08:00';
-      return timeStr.slice(0, 5);
-    };
-
     setHeureDebut(formatTime(session.heure_debut));
     setHeureFin(formatTime(session.heure_fin));
     setSalle(session.salle || '');
@@ -215,16 +201,16 @@ const EmploiDuTemps = () => {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      
+
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl md:text-3xl font-black tracking-tight">EMPLOI DU TEMPS</h2>
           <p className="text-slate-400 text-sm mt-1">Gérez le calendrier hebdomadaire de cours et de TP de vos groupes.</p>
         </div>
-        
+
         {selectedGroupeId && (
-          <button 
+          <button
             onClick={() => handleOpenAddModal()}
             className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-xs font-bold shadow-[0_0_15px_rgba(34,211,238,0.2)] transition-all self-start sm:self-auto"
           >
@@ -238,7 +224,7 @@ const EmploiDuTemps = () => {
       <div className="p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md grid grid-cols-1 sm:grid-cols-2 gap-6 shadow-xl">
         <div className="space-y-2">
           <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest">Filière</label>
-          <select 
+          <select
             value={selectedFiliereId}
             onChange={(e) => setSelectedFiliereId(e.target.value)}
             className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-white/10 text-sm text-white focus:outline-none focus:border-cyan-500 font-semibold"
@@ -252,7 +238,7 @@ const EmploiDuTemps = () => {
 
         <div className="space-y-2">
           <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest">Groupe</label>
-          <select 
+          <select
             value={selectedGroupeId}
             onChange={(e) => setSelectedGroupeId(e.target.value)}
             disabled={!selectedFiliereId}
@@ -290,14 +276,14 @@ const EmploiDuTemps = () => {
             const daySessions = getSessionsForDay(day);
 
             return (
-              <div 
-                key={day} 
+              <div
+                key={day}
                 className="p-4 rounded-2xl bg-white/3 border border-white/5 backdrop-blur-md flex flex-col space-y-4 shadow-lg min-h-[300px]"
               >
                 {/* Header card for the day */}
                 <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
                   <h3 className="font-extrabold text-[12px] uppercase tracking-widest text-cyan-400">{day}</h3>
-                  <button 
+                  <button
                     onClick={() => handleOpenAddModal(day)}
                     className="p-1 rounded bg-white/5 hover:bg-cyan-500 hover:text-slate-900 text-cyan-400 transition-all"
                   >
@@ -311,27 +297,44 @@ const EmploiDuTemps = () => {
                     <span className="text-[10px] text-slate-600 font-bold italic block text-center py-8">Aucun cours</span>
                   ) : (
                     daySessions.map(session => (
-                      <div 
+                      <div
                         key={session.id}
                         onClick={() => handleOpenEditModal(session)}
-                        className={`p-3.5 rounded-xl border transition-all cursor-pointer hover:scale-[1.03] text-left flex flex-col justify-between space-y-2 shadow-md ${
-                          session.type === 'exam'
+                        className={`p-3.5 rounded-xl border transition-all cursor-pointer hover:scale-[1.03] text-left flex flex-col justify-between space-y-2 shadow-md ${session.type === 'exam'
                             ? 'bg-red-500/10 border-red-500/20 hover:border-red-500/40 text-red-300'
                             : session.type === 'tp'
-                            ? 'bg-indigo-500/10 border-indigo-500/20 hover:border-indigo-500/40 text-indigo-300'
-                            : 'bg-cyan-500/10 border-cyan-500/20 hover:border-cyan-500/40 text-cyan-300'
-                        }`}
+                              ? 'bg-indigo-500/10 border-indigo-500/20 hover:border-indigo-500/40 text-indigo-300'
+                              : 'bg-cyan-500/10 border-cyan-500/20 hover:border-cyan-500/40 text-cyan-300'
+                          }`}
                       >
                         <div>
                           <div className="flex items-center justify-between gap-1 text-[9.5px] font-extrabold uppercase tracking-wide opacity-80">
-                            <span className="flex items-center gap-1"><Clock size={11} /> {session.heure_debut.slice(0, 5)} - {session.heure_fin.slice(0, 5)}</span>
+                            <span className="flex items-center gap-1"><Clock size={11} /> {formatTime(session.heure_debut)} - {formatTime(session.heure_fin)}</span>
                           </div>
                           <h4 className="font-bold text-[12.5px] text-white line-clamp-1 mt-1">{session.titre}</h4>
                         </div>
 
-                        <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5 text-[10px] font-bold text-slate-400">
-                          <span className="flex items-center gap-1"><MapPin size={11} /> {session.salle || 'N/A'}</span>
-                          <span className="uppercase text-[9px] font-extrabold tracking-widest opacity-80">{session.type}</span>
+                        <div className="flex flex-col gap-3 pt-2 border-t border-white/5">
+                          <div className="flex items-center justify-between gap-2 text-[10px] font-bold text-slate-400">
+                            <span className="flex items-center gap-1"><MapPin size={11} /> {session.salle || 'N/A'}</span>
+                            <span className="uppercase text-[9px] font-extrabold tracking-widest opacity-80">{session.type}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleOpenEditModal(session); }}
+                              className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] font-bold text-slate-200 hover:bg-white/10 transition-all"
+                            >
+                              <Edit3 size={12} /> Modifier
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleDeleteSession(session.id); }}
+                              className="px-2 py-1 rounded-lg bg-red-500/10 border border-red-500/20 text-[10px] font-bold text-red-300 hover:bg-red-500/20 transition-all"
+                            >
+                              <Trash2 size={12} /> Supprimer
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))
@@ -346,14 +349,14 @@ const EmploiDuTemps = () => {
       {/* CREATE & EDIT SESSION MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <form 
+          <form
             onSubmit={handleSaveSession}
             className="w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl shadow-2xl p-6 md:p-8 space-y-5 animate-scale-up"
           >
-            
+
             <div className="flex items-center justify-between pb-3 border-b border-white/5">
               <h3 className="text-base font-black text-white">{editingSession ? 'Modifier la Session' : 'Planifier un cours/TP'}</h3>
-              <button 
+              <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
                 className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-all"
@@ -365,7 +368,7 @@ const EmploiDuTemps = () => {
             {/* Titre */}
             <div className="space-y-1.5">
               <label className="block text-[10.5px] font-bold text-slate-400 uppercase tracking-widest">Titre Session</label>
-              <input 
+              <input
                 type="text"
                 required
                 placeholder="Ex. Architecture logicielle..."
@@ -379,7 +382,7 @@ const EmploiDuTemps = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="block text-[10.5px] font-bold text-slate-400 uppercase tracking-widest">Jour</label>
-                <select 
+                <select
                   value={jour}
                   onChange={(e) => setJour(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-xs text-white focus:outline-none"
@@ -392,7 +395,7 @@ const EmploiDuTemps = () => {
 
               <div className="space-y-1.5">
                 <label className="block text-[10.5px] font-bold text-slate-400 uppercase tracking-widest">Type</label>
-                <select 
+                <select
                   value={typeSession}
                   onChange={(e) => setTypeSession(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-xs text-white focus:outline-none font-bold"
@@ -408,7 +411,7 @@ const EmploiDuTemps = () => {
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <label className="block text-[10.5px] font-bold text-slate-400 uppercase tracking-widest">Début</label>
-                <input 
+                <input
                   type="time"
                   required
                   value={heureDebut}
@@ -419,7 +422,7 @@ const EmploiDuTemps = () => {
 
               <div className="space-y-1.5">
                 <label className="block text-[10.5px] font-bold text-slate-400 uppercase tracking-widest">Fin</label>
-                <input 
+                <input
                   type="time"
                   required
                   value={heureFin}
@@ -430,7 +433,7 @@ const EmploiDuTemps = () => {
 
               <div className="space-y-1.5">
                 <label className="block text-[10.5px] font-bold text-slate-400 uppercase tracking-widest">Salle</label>
-                <input 
+                <input
                   type="text"
                   placeholder="Lab 3"
                   value={salle}
@@ -444,7 +447,7 @@ const EmploiDuTemps = () => {
             <div className="flex items-center justify-between pt-3 border-t border-white/5">
               <div>
                 {editingSession && (
-                  <button 
+                  <button
                     type="button"
                     onClick={() => {
                       setIsModalOpen(false);
@@ -459,14 +462,14 @@ const EmploiDuTemps = () => {
               </div>
 
               <div className="flex gap-3">
-                <button 
+                <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold transition-all"
                 >
                   Annuler
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-xs font-bold shadow-[0_0_15px_rgba(34,211,238,0.2)] transition-all"
                 >

@@ -18,4 +18,5 @@ class Question extends Model
     {
         return $this->hasMany(ChoixQcm::class, 'question_id');
     }
+    public $timestamps = false;
 }

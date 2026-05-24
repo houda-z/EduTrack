@@ -52,7 +52,8 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.time-column-header, .day-column-header {
+.time-column-header,
+.day-column-header {
     padding: 20px;
     text-align: center;
     font-weight: 700;
@@ -101,7 +102,7 @@
     overflow: hidden;
     transition: 0.3s;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .session-card:hover {
@@ -132,9 +133,20 @@
     height: 100%;
 }
 
-.cyan .session-glow { background: #22d3ee; box-shadow: 0 0 10px #22d3ee; }
-.purple .session-glow { background: #8b5cf6; box-shadow: 0 0 10px #8b5cf6; }
-.blue .session-glow { background: #3b82f6; box-shadow: 0 0 10px #3b82f6; }
+.cyan .session-glow {
+    background: #22d3ee;
+    box-shadow: 0 0 10px #22d3ee;
+}
+
+.purple .session-glow {
+    background: #8b5cf6;
+    box-shadow: 0 0 10px #8b5cf6;
+}
+
+.blue .session-glow {
+    background: #3b82f6;
+    box-shadow: 0 0 10px #3b82f6;
+}
 
 .session-card h4 {
     color: #fff;
@@ -149,7 +161,8 @@
     gap: 4px;
 }
 
-.room, .teacher {
+.room,
+.teacher {
     font-size: 0.75rem;
     color: #94a3b8;
     display: flex;
@@ -189,6 +202,87 @@
     border-radius: 50%;
 }
 
-.dot.cyan { background: #22d3ee; box-shadow: 0 0 5px #22d3ee; }
-.dot.purple { background: #8b5cf6; box-shadow: 0 0 5px #8b5cf6; }
-.dot.blue { background: #3b82f6; box-shadow: 0 0 5px #3b82f6; }
+.schedule-days-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+    padding: 24px;
+}
+
+.day-column {
+    display: flex;
+    flex-direction: column;
+    min-height: 320px;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.day-column-body {
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 220px;
+}
+
+.day-empty-placeholder {
+    padding: 22px 16px;
+    border: 1px dashed rgba(148, 163, 184, 0.3);
+    border-radius: 18px;
+    color: #94a3b8;
+    text-align: center;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.session-card-body {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.session-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: #c7d2fe;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.session-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #e2e8f0;
+    font-weight: 700;
+}
+
+.session-type {
+    padding: 0.2rem 0.55rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #f8fafc;
+    font-weight: 700;
+}
+
+.dot.cyan {
+    background: #22d3ee;
+    box-shadow: 0 0 5px #22d3ee;
+}
+
+.dot.purple {
+    background: #8b5cf6;
+    box-shadow: 0 0 5px #8b5cf6;
+}
+
+.dot.blue {
+    background: #3b82f6;
+    box-shadow: 0 0 5px #3b82f6;
+}

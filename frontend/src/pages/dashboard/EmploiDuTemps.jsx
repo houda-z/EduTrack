@@ -5,10 +5,6 @@ import './EmploiDuTemps.css';
 
 const EmploiDuTemps = () => {
     const days = ["lundi", "mardi", "mercredi", "jeudi", "vendredi"];
-    const timeSlots = [
-        "08:00", "09:00", "10:00", "11:00", "12:00",
-        "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"
-    ];
 
     const [schedule, setSchedule] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -66,12 +62,15 @@ const EmploiDuTemps = () => {
         return typeMap[type?.toLowerCase()] || 'cyan';
     };
 
-    const getSessionForSlot = (day, hour) => {
-        return schedule.find(s => {
-            const sDay = s.jour?.toLowerCase();
-            const sStart = s.heure_debut?.substring(0, 5); // "HH:MM"
-            return sDay === day && sStart === hour;
-        });
+    const formatTime = (timeStr) => {
+        if (!timeStr) return '';
+        return timeStr.substring(0, 5);
+    };
+
+    const getSessionsForDay = (day) => {
+        return schedule
+            .filter(s => s.jour?.toLowerCase() === day)
+            .sort((a, b) => formatTime(a.heure_debut).localeCompare(formatTime(b.heure_debut)));
     };
 
     if (loading) {
@@ -100,59 +99,46 @@ const EmploiDuTemps = () => {
                 </div>
             )}
 
-            {schedule.length === 0 ? (
-                <div style={{ color: '#94a3b8', textAlign: 'center', padding: '60px 20px' }}>
-                    <p style={{ fontSize: '18px', fontWeight: 'bold' }}>Aucun cours programmé</p>
-                    <p style={{ fontSize: '13px', marginTop: '8px' }}>Votre emploi du temps apparaîtra ici une fois qu'il sera défini.</p>
-                </div>
-            ) : (
-                <>
-                    <div className="schedule-grid-wrapper">
-                        <div className="schedule-header-row">
-                            <div className="time-column-header">Heure</div>
-                            {days.map(day => (
-                                <div key={day} className="day-column-header">{day.charAt(0).toUpperCase() + day.slice(1)}</div>
-                            ))}
-                        </div>
+            <div className="schedule-grid-wrapper">
+                <div className="schedule-days-grid">
+                    {days.map(day => {
+                        const daySessions = getSessionsForDay(day);
 
-                        <div className="schedule-body">
-                            {timeSlots.map(slot => (
-                                <div key={slot} className="schedule-row">
-                                    <div className="time-slot-label">
-                                        <Clock size={14} />
-                                        <span>{slot}</span>
-                                    </div>
-                                    {days.map(day => {
-                                        const session = getSessionForSlot(day, slot);
-                                        return (
-                                            <div key={`${day}-${slot}`} className="schedule-cell">
-                                                {session ? (
-                                                    <div className={`session-card ${getTypeColor(session.type)}`}>
-                                                        <div className="session-glow"></div>
-                                                        <h4>{session.titre}</h4>
-                                                        <div className="session-meta">
-                                                            <span className="room"><MapPin size={12} /> {session.salle}</span>
-                                                            <span className="teacher">{session.formateur?.prenom} {session.formateur?.name}</span>
-                                                        </div>
+                        return (
+                            <div key={day} className="day-column">
+                                <div className="day-column-header">{day.charAt(0).toUpperCase() + day.slice(1)}</div>
+                                <div className="day-column-body">
+                                    {daySessions.length === 0 ? (
+                                        <div className="day-empty-placeholder">Aucun cours</div>
+                                    ) : (
+                                        daySessions.map(session => (
+                                            <div key={session.id} className={`session-card ${getTypeColor(session.type)}`}>
+                                                <div className="session-glow"></div>
+                                                <div className="session-card-body">
+                                                    <div className="session-top">
+                                                        <span className="session-time">{formatTime(session.heure_debut)} - {formatTime(session.heure_fin)}</span>
+                                                        <span className="session-type">{session.type}</span>
                                                     </div>
-                                                ) : (
-                                                    <div className="empty-slot"></div>
-                                                )}
+                                                    <h4>{session.titre}</h4>
+                                                    <div className="session-meta">
+                                                        <span className="room"><MapPin size={12} /> {session.salle}</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        );
-                                    })}
+                                        ))
+                                    )}
                                 </div>
-                            ))}
-                        </div>
-                    </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
 
-                    <div className="schedule-legend">
-                        <div className="legend-item"><span className="dot cyan"></span> Cours</div>
-                        <div className="legend-item"><span className="dot purple"></span> Examen</div>
-                        <div className="legend-item"><span className="dot blue"></span> TP</div>
-                    </div>
-                </>
-            )}
+            <div className="schedule-legend">
+                <div className="legend-item"><span className="dot cyan"></span> Cours</div>
+                <div className="legend-item"><span className="dot purple"></span> Examen</div>
+                <div className="legend-item"><span className="dot blue"></span> TP</div>
+            </div>
         </div>
     );
 };

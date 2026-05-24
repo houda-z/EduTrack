@@ -243,7 +243,20 @@ class ExamenController extends Controller
             ], 500);
         }
     }
+    public function show($id)
+    {
+        $exam = Examen::with([
+            'questions.choix',
+            'filiere:id,nom',
+            'groupe:id,nom'
+        ])->findOrFail($id);
 
+        return response()->json([
+            'success' => true,
+            'data'    => $exam,
+            'message' => 'Examen récupéré.'
+        ]);
+    }
     public function getResultats($id)
     {
         $user = auth()->user();
@@ -292,4 +305,26 @@ class ExamenController extends Controller
             'message' => 'Résultats récupérés avec succès.'
         ]);
     }
+
+    public function updateStatut(Request $request, $id)
+{
+    $user = auth()->user();
+    $exam = Examen::findOrFail($id);
+
+    if ($exam->formateur_id !== $user->id && $exam->enseignant_id !== $user->id) {
+        return response()->json(['success' => false, 'message' => 'Non autorisé.'], 403);
+    }
+
+    $request->validate([
+        'statut' => 'required|in:brouillon,publie,termine'
+    ]);
+
+    $exam->update(['statut' => $request->statut]);
+
+    return response()->json([
+        'success' => true,
+        'data'    => $exam,
+        'message' => 'Statut mis à jour.'
+    ]);
+}
 }

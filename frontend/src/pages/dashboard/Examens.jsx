@@ -140,7 +140,7 @@ const Examens = () => {
                                 {exam.statut === 'publie' ? (
                                     <button
                                         className="btn-exam-action btn-cyan"
-                                        onClick={() => navigate(`/etudiant/${nom}/en-ligne`)}
+                                        onClick={() => navigate(`/etudiant/${nom}/en-ligne`, { state: { examId: exam.id, examTitre: exam.titre, examDuree: exam.duree_minutes } })}
                                     >
                                         COMMENCER L'EXAMEN
                                         <ArrowRight size={18} />

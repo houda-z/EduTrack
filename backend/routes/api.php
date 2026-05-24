@@ -17,6 +17,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/cours', [App\Http\Controllers\Api\CoursController::class, 'index']);
     Route::get('/examens', [App\Http\Controllers\Api\ExamenController::class, 'index']);
     Route::get('/emploi-du-temps', [App\Http\Controllers\Api\EmploiDuTempsController::class, 'index']);
+
+    
     
     // Commentaires — accessible par tous (etudiant + enseignant)
     Route::get('/cours/{id}/commentaires', [App\Http\Controllers\Api\CoursController::class, 'getCommentaires']);
@@ -31,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/profile', [App\Http\Controllers\Api\StudentController::class, 'getProfile']);
         Route::post('/profile/update', [App\Http\Controllers\Api\StudentController::class, 'updateProfile']);
         Route::post('/exams/submit', [App\Http\Controllers\Api\StudentController::class, 'submitExam']);
+        Route::get('/examens/{id}', [App\Http\Controllers\Api\ExamenController::class, 'show']);
     });
 
     // Formateur (Enseignant) Routes
@@ -41,6 +44,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/formateur/stats', [App\Http\Controllers\Api\FormateurController::class, 'getStats']);
         Route::get('/formateur/mes-etudiants', [App\Http\Controllers\Api\FormateurController::class, 'getMesEtudiants']);
 
+        Route::patch('/examens/{id}/statut', [App\Http\Controllers\Api\ExamenController::class, 'updateStatut']);
+        
         // Course Write Operations
         Route::post('/cours', [App\Http\Controllers\Api\CoursController::class, 'store']);
         Route::put('/cours/{id}', [App\Http\Controllers\Api\CoursController::class, 'update']);
