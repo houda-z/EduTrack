@@ -10,14 +10,17 @@ const Register = () => {
     password: '',
     confirmPassword: '',
     role: 'etudiant',
-    filiere: ''
+    filiere_id: '',
+    groupe_id: ''
   });
 
   const [filieres, setFilieres] = useState([]);
+  const [groupes, setGroupes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
+  // Fetch filieres on mount
   useEffect(() => {
     const fetchFilieres = async () => {
       try {
@@ -29,6 +32,29 @@ const Register = () => {
     };
     fetchFilieres();
   }, []);
+
+  // Fetch groupes when filiere changes
+  useEffect(() => {
+    const fetchGroupes = async () => {
+      if (!formData.filiere_id) {
+        setGroupes([]);
+        setFormData(prev => ({ ...prev, groupe_id: '' }));
+        return;
+      }
+      try {
+        const response = await axios.get(`http://127.0.0.1:8000/api/groupes?filiere_id=${formData.filiere_id}`);
+        if (response.data && response.data.success) {
+          setGroupes(response.data.data);
+        } else {
+          setGroupes(response.data || []);
+        }
+      } catch (err) {
+        console.error('Erreur lors de la récupération des groupes:', err);
+        setGroupes([]);
+      }
+    };
+    fetchGroupes();
+  }, [formData.filiere_id]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -52,14 +78,15 @@ const Register = () => {
         password: formData.password,
         password_confirmation: formData.confirmPassword,
         role: 'etudiant',
-        filiere: formData.filiere
+        filiere_id: formData.filiere_id ? parseInt(formData.filiere_id) : null,
+        groupe_id: formData.groupe_id ? parseInt(formData.groupe_id) : null,
       });
 
       if (response.status === 201 || response.status === 200) {
         const { token, user } = response.data;
         localStorage.setItem('user_token', token);
-        localStorage.setItem('user', JSON.stringify(user));
-        const nom = (prenom + name).toLowerCase().replace(/\s+/g, '');
+        localStorage.setItem('user_data', JSON.stringify(user));
+        const nom = (user.prenom + user.name).toLowerCase().replace(/\s+/g, '');
         navigate(`/etudiant/${nom}/cours`);
       }
     } catch (err) {
@@ -138,37 +165,59 @@ const Register = () => {
           </div>
           {errors.password && <p className="text-red-300 text-xs">{errors.password[0]}</p>}
 
-          <div className="grid grid-cols-2 gap-4">
-            {/* Role — hidden, par défaut etudiant */}
-            <input type="hidden" name="role" value="etudiant" />
-
-            {/* Filières mn backend */}
-            <div className="col-span-2">
-              <label className="block text-sm mb-1 ml-1">Filière</label>
-              <select
-                name="filiere"
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white outline-none focus:border-white/50 transition-all"
-                onChange={handleChange}
-                value={formData.filiere}
-                required
-              >
-                <option value="" style={{ color: 'black', backgroundColor: 'white' }}>
-                  Choisir votre filière...
-                </option>
-                {filieres.length > 0 ? (
-                  filieres.map(f => (
-                    <option key={f.id} value={f.id} style={{ color: 'black', backgroundColor: 'white' }}>
-                      {f.nom}
-                    </option>
-                  ))
-                ) : (
-                  <option disabled style={{ color: 'black', backgroundColor: 'white' }}>
-                    Chargement...
+          {/* Filière dropdown */}
+          <div>
+            <label className="block text-sm mb-1 ml-1">Filière</label>
+            <select
+              name="filiere_id"
+              className={`w-full px-4 py-3 rounded-xl bg-white/10 border ${errors.filiere_id ? 'border-red-400' : 'border-white/20'} text-white outline-none focus:border-white/50 transition-all`}
+              onChange={handleChange}
+              value={formData.filiere_id}
+              required
+            >
+              <option value="" style={{ color: 'black', backgroundColor: 'white' }}>
+                Choisir votre filière...
+              </option>
+              {filieres.length > 0 ? (
+                filieres.map(f => (
+                  <option key={f.id} value={f.id} style={{ color: 'black', backgroundColor: 'white' }}>
+                    {f.nom}
                   </option>
-                )}
-              </select>
-            </div>
+                ))
+              ) : (
+                <option disabled style={{ color: 'black', backgroundColor: 'white' }}>
+                  Chargement...
+                </option>
+              )}
+            </select>
+            {errors.filiere_id && <p className="text-red-300 text-xs mt-1">{errors.filiere_id[0]}</p>}
           </div>
+
+          {/* Groupe dropdown — populated dynamically based on filière */}
+          <div>
+            <label className="block text-sm mb-1 ml-1">Groupe</label>
+            <select
+              name="groupe_id"
+              className={`w-full px-4 py-3 rounded-xl bg-white/10 border ${errors.groupe_id ? 'border-red-400' : 'border-white/20'} text-white outline-none focus:border-white/50 transition-all disabled:opacity-50`}
+              onChange={handleChange}
+              value={formData.groupe_id}
+              disabled={!formData.filiere_id}
+              required
+            >
+              <option value="" style={{ color: 'black', backgroundColor: 'white' }}>
+                {formData.filiere_id ? 'Choisir votre groupe...' : 'Sélectionnez d\'abord une filière'}
+              </option>
+              {groupes.map(g => (
+                <option key={g.id} value={g.id} style={{ color: 'black', backgroundColor: 'white' }}>
+                  {g.nom}
+                </option>
+              ))}
+            </select>
+            {errors.groupe_id && <p className="text-red-300 text-xs mt-1">{errors.groupe_id[0]}</p>}
+          </div>
+
+          <input type="hidden" name="role" value="etudiant" />
+
           <button
             type="submit"
             disabled={loading}

@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
-import { 
-    BookOpen, 
-    Calendar, 
-    ClipboardList, 
-    Award, 
-    User, 
-    Settings, 
-    LogOut, 
-    Search, 
+import {
+    BookOpen,
+    Calendar,
+    ClipboardList,
+    Award,
+    User,
+    Settings,
+    LogOut,
+    Search,
     Bell,
     Menu,
     X,
     LayoutDashboard
 } from 'lucide-react';
-import { Link, useLocation, useParams, Outlet } from 'react-router-dom';
+import { Link, useLocation, useParams, Outlet, useNavigate } from 'react-router-dom';
 import './EtudiantLayout.css';
+import api from '../../services/api';
 
 const EtudiantLayout = () => {
     const { nom } = useParams();
@@ -32,6 +33,19 @@ const EtudiantLayout = () => {
     ];
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            await api.delete('/logout');
+        } catch (err) {
+            console.warn('Logout API failed:', err);
+        } finally {
+            localStorage.removeItem('user_token');
+            localStorage.removeItem('user');
+            navigate('/login');
+        }
+    };
 
     // Dynamic Title based on Path
     const getPageTitle = () => {
@@ -58,9 +72,9 @@ const EtudiantLayout = () => {
                     {navItems.map((item) => {
                         const isActive = location.pathname === item.path;
                         return (
-                            <Link 
-                                key={item.path} 
-                                to={item.path} 
+                            <Link
+                                key={item.path}
+                                to={item.path}
                                 className={`nav-item ${isActive ? 'active' : ''}`}
                             >
                                 <span className="nav-icon">{item.icon}</span>
@@ -73,7 +87,7 @@ const EtudiantLayout = () => {
 
                 <div className="sidebar-footer">
                     <div className="version-tag">VER. 2.0.4-STU</div>
-                    <button className="logout-btn">
+                    <button className="logout-btn" onClick={handleLogout}>
                         <LogOut size={20} />
                         <span>Déconnexion</span>
                     </button>
@@ -100,7 +114,7 @@ const EtudiantLayout = () => {
                             <Bell size={20} />
                             <span className="scifi-dot"></span>
                         </button>
-                        
+
                         <div className="stu-profile-pill">
                             <div className="stu-info">
                                 <span className="stu-name">{nom || "Utilisateur"}</span>

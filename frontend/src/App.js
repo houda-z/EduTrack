@@ -20,6 +20,14 @@ import FiliereManagement from './pages/dashboard/FiliereManagement';
 import UserManagement from './pages/dashboard/UserManagement';
 import Settings from './pages/dashboard/Settings';
 
+import FormateurLayout from './components/layout/FormateurLayout';
+import FormateurDashboard from './pages/formateur/Dashboard';
+import FormateurCours from './pages/formateur/MesCours';
+import FormateurCreerCours from './pages/formateur/CreerCours';
+import FormateurExamens from './pages/formateur/Examens';
+import FormateurEtudiants from './pages/formateur/MesEtudiants';
+import FormateurEmploi from './pages/formateur/EmploiDuTemps';
+
 function App() {
   return (
     <Router>
@@ -41,6 +49,17 @@ function App() {
             <Route path="notes" element={<MesNotes />} />
             <Route path="profil" element={<ProfilEtudiant />} />
             <Route path="parametres" element={<ParametresEtudiant />} />
+          </Route>
+
+          {/* Espace Formateur */}
+          <Route path="/formateur" element={<FormateurLayout />}>
+            <Route index element={<FormateurDashboard />} />
+            <Route path="dashboard" element={<FormateurDashboard />} />
+            <Route path="cours" element={<FormateurCours />} />
+            <Route path="cours/creer" element={<FormateurCreerCours />} />
+            <Route path="examens" element={<FormateurExamens />} />
+            <Route path="etudiants" element={<FormateurEtudiants />} />
+            <Route path="emploi-du-temps" element={<FormateurEmploi />} />
           </Route>
 
           {/* Admin */}

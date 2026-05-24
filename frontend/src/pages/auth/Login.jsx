@@ -32,9 +32,9 @@ const Login = () => {
       if (user.role === 'admin') {
         navigate('/admin/dashboard');
       } else if (user.role === 'enseignant') {
-        navigate('/enseignant/dashboard');
+        navigate('/formateur/dashboard');
       } else {
-        const nom = (user.name).toLowerCase().replace(/\s+/g, '');
+        const nom = ((user.prenom || '') + (user.name || '')).toLowerCase().replace(/\s+/g, '');
         navigate(`/etudiant/${nom}/cours`);
       }
 
