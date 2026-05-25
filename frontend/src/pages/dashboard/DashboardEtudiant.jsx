@@ -1,50 +1,157 @@
-import React from 'react';
-import { 
-    BookOpen, 
-    Clock, 
-    AlertCircle, 
-    TrendingUp, 
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import {
+    BookOpen,
+    Clock,
+    AlertCircle,
+    TrendingUp,
     ArrowRight,
     Calendar,
     Zap
 } from 'lucide-react';
+import api from '../../services/api';
 import './DashboardEtudiant.css';
 
+const formatRelativeTime = (isoString) => {
+    if (!isoString) return 'Récemment';
+    try {
+        const date = new Date(isoString);
+        const diffMs = Date.now() - date.getTime();
+        const diffMin = Math.floor(diffMs / 60000);
+        if (diffMin < 1) return "À l'instant";
+        if (diffMin < 60) return `Il y a ${diffMin} min`;
+        const diffH = Math.floor(diffMin / 60);
+        if (diffH < 24) return `Il y a ${diffH}h`;
+        const diffD = Math.floor(diffH / 24);
+        if (diffD < 7) return `Il y a ${diffD} jour${diffD > 1 ? 's' : ''}`;
+        return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    } catch {
+        return 'Récemment';
+    }
+};
+
 const DashboardEtudiant = () => {
-    const stats = [
-        { label: "Moyenne Générale", value: "15.82", icon: <TrendingUp className="text-purple" />, trend: "+1.2" },
-        { label: "Cours Terminés", value: "12/18", icon: <BookOpen className="text-cyan" />, trend: "65%" },
-        { label: "Examens à venir", value: "3", icon: <Calendar className="text-yellow" />, trend: "Cette semaine" },
-        { label: "Points d'activité", value: "1,240", icon: <Zap className="text-green" />, trend: "Niveau 4" },
-    ];
+    const { nom } = useParams();
+    const navigate = useNavigate();
 
-    const urgentExams = [
-        { id: 1, title: "Architecture Microservices", date: "Demain, 09:00", duration: "2h", status: "Critical" },
-        { id: 2, title: "Intelligence Artificielle", date: "22 Mai, 14:00", duration: "1h30", status: "Upcoming" },
-    ];
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [user, setUser] = useState(null);
+    const [stats, setStats] = useState(null);
+    const [urgentExams, setUrgentExams] = useState([]);
+    const [recentActivity, setRecentActivity] = useState([]);
 
-    const recentActivity = [
-        { id: 1, action: "Note publiée", target: "Algorithmique Avancée", time: "Il y a 2h", result: "16.5/20" },
-        { id: 2, action: "Nouveau cours", target: "UI/UX Futuriste", time: "Il y a 5h", type: "Ressource" },
-    ];
+    useEffect(() => {
+        fetchDashboard();
+    }, []);
+
+    const fetchDashboard = async () => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const response = await api.get('/student/stats');
+
+            if (response.data?.success && response.data.data) {
+                const data = response.data.data;
+                setUser(data.user);
+                setStats(data.stats);
+                setUrgentExams(data.urgent_exams || []);
+                setRecentActivity(data.recent_activity || []);
+
+                if (data.user) {
+                    const stored = JSON.parse(localStorage.getItem('user') || '{}');
+                    localStorage.setItem('user', JSON.stringify({
+                        ...stored,
+                        ...data.user,
+                        moyenne: data.user.moyenne,
+                    }));
+                }
+            } else {
+                setError('Données du tableau de bord indisponibles.');
+            }
+        } catch (err) {
+            console.error('Dashboard fetch error:', err);
+            setError('Erreur lors du chargement du tableau de bord.');
+
+            const stored = JSON.parse(localStorage.getItem('user') || 'null');
+            if (stored) {
+                setUser({
+                    prenom: stored.prenom,
+                    name: stored.name,
+                    last_connection: null,
+                });
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const displayName = (user?.prenom || user?.name || 'ÉTUDIANT').toUpperCase();
+
+    const statsCards = stats ? [
+        {
+            label: 'Moyenne Générale',
+            value: stats.moyenne != null ? Number(stats.moyenne).toFixed(2) : '—',
+            icon: <TrendingUp className="text-purple" />,
+            trend: stats.notes_count > 0 ? `${stats.notes_count} note${stats.notes_count > 1 ? 's' : ''}` : 'Aucune note',
+        },
+        {
+            label: 'Cours Terminés',
+            value: `${stats.cours_termines}/${stats.cours_total}`,
+            icon: <BookOpen className="text-cyan" />,
+            trend: `${stats.cours_completion_percent}%`,
+        },
+        {
+            label: 'Examens à venir',
+            value: String(stats.examens_a_venir),
+            icon: <Calendar className="text-yellow" />,
+            trend: stats.examens_a_venir === 1 ? 'Cette semaine' : 'À planifier',
+        },
+        {
+            label: "Points d'activité",
+            value: stats.points_activite?.toLocaleString('fr-FR') ?? '0',
+            icon: <Zap className="text-green" />,
+            trend: stats.notes_count > 0 ? 'Actif' : 'Débutant',
+        },
+    ] : [];
+
+    if (loading) {
+        return (
+            <div className="dashboard-container dashboard-loading">
+                <div className="dashboard-spinner" />
+                <p>Chargement du tableau de bord...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="dashboard-container">
+            {error && (
+                <div className="dashboard-error-banner">
+                    <AlertCircle size={18} />
+                    <span>{error}</span>
+                    <button type="button" onClick={fetchDashboard}>Réessayer</button>
+                </div>
+            )}
+
             {/* Welcome Banner */}
             <div className="welcome-banner glass-glow">
                 <div className="welcome-text">
-                    <h1>RE-BONJOUR, <span className="scifi-accent">HOUDA</span></h1>
+                    <h1>RE-BONJOUR, <span className="scifi-accent">{displayName}</span></h1>
                     <p>Système opérationnel. Tous les modules sont synchronisés.</p>
                 </div>
                 <div className="welcome-stats">
                     <div className="pulse-circle"></div>
-                    <span>Dernière connexion: Il y a 10 minutes</span>
+                    <span>
+                        Dernière activité : {formatRelativeTime(user?.last_connection)}
+                    </span>
                 </div>
             </div>
 
             {/* Stats Grid */}
             <div className="stats-grid-cyber">
-                {stats.map((stat, idx) => (
+                {statsCards.map((stat, idx) => (
                     <div key={idx} className="stat-card-cyber glass-glow">
                         <div className="stat-icon-box">{stat.icon}</div>
                         <div className="stat-info">
@@ -65,21 +172,41 @@ const DashboardEtudiant = () => {
                                 <Clock size={20} className="text-purple" />
                                 <h3>EXAMENS URGENTS</h3>
                             </div>
-                            <button className="view-all">VOIR TOUT <ArrowRight size={14} /></button>
+                            <button
+                                type="button"
+                                className="view-all"
+                                onClick={() => navigate(`/etudiant/${nom}/examens`)}
+                            >
+                                VOIR TOUT <ArrowRight size={14} />
+                            </button>
                         </div>
                         <div className="urgent-list">
-                            {urgentExams.map(exam => (
-                                <div key={exam.id} className="urgent-item">
-                                    <div className="urgent-info">
-                                        <h4>{exam.title}</h4>
-                                        <span><Calendar size={14} /> {exam.date}</span>
+                            {urgentExams.length === 0 ? (
+                                <p className="dashboard-empty-msg">Aucun examen à venir pour le moment.</p>
+                            ) : (
+                                urgentExams.map((exam) => (
+                                    <div key={exam.id} className="urgent-item">
+                                        <div className="urgent-info">
+                                            <h4>{exam.title}</h4>
+                                            <span>
+                                                <Calendar size={14} /> {exam.date_label}
+                                            </span>
+                                        </div>
+                                        <div className="urgent-action">
+                                            <span className={`status-tag ${exam.status.toLowerCase()}`}>
+                                                {exam.status}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                className="btn-go-exam"
+                                                onClick={() => navigate(`/etudiant/${nom}/examens`)}
+                                            >
+                                                GO
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="urgent-action">
-                                        <span className={`status-tag ${exam.status.toLowerCase()}`}>{exam.status}</span>
-                                        <button className="btn-go-exam">GO</button>
-                                    </div>
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>
@@ -94,16 +221,29 @@ const DashboardEtudiant = () => {
                             </div>
                         </div>
                         <div className="activity-list">
-                            {recentActivity.map(activity => (
-                                <div key={activity.id} className="activity-item">
-                                    <div className="activity-dot"></div>
-                                    <div className="activity-details">
-                                        <p><strong>{activity.action}</strong>: {activity.target}</p>
-                                        <span className="activity-time">{activity.time}</span>
+                            {recentActivity.length === 0 ? (
+                                <p className="dashboard-empty-msg">Aucune activité récente.</p>
+                            ) : (
+                                recentActivity.map((activity) => (
+                                    <div key={activity.id} className="activity-item">
+                                        <div className="activity-dot"></div>
+                                        <div className="activity-details">
+                                            <p>
+                                                <strong>{activity.action}</strong>: {activity.target}
+                                            </p>
+                                            <span className="activity-time">
+                                                {formatRelativeTime(activity.time)}
+                                            </span>
+                                        </div>
+                                        {activity.result && (
+                                            <span className="activity-result">{activity.result}</span>
+                                        )}
+                                        {activity.type === 'cours' && !activity.result && (
+                                            <span className="activity-result activity-type-tag">Ressource</span>
+                                        )}
                                     </div>
-                                    {activity.result && <span className="activity-result">{activity.result}</span>}
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>

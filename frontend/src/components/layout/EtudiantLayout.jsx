@@ -23,7 +23,7 @@ const EtudiantLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     const navItems = [
-        { path: `/etudiant/${nom}`, icon: <LayoutDashboard size={20} />, label: "Dashboard" },
+        { path: `/etudiant/${nom}/dashboard`, icon: <LayoutDashboard size={20} />, label: "Dashboard", end: true },
         { path: `/etudiant/${nom}/cours`, icon: <BookOpen size={20} />, label: "Mes Cours" },
         { path: `/etudiant/${nom}/emploi`, icon: <Calendar size={20} />, label: "Emploi du Temps" },
         { path: `/etudiant/${nom}/examens`, icon: <ClipboardList size={20} />, label: "Examens" },
@@ -49,8 +49,12 @@ const EtudiantLayout = () => {
 
     // Dynamic Title based on Path
     const getPageTitle = () => {
-        const currentItem = navItems.find(item => location.pathname.includes(item.path.split('/').pop()));
-        return currentItem ? currentItem.label : "Tableau de Bord";
+        const path = location.pathname;
+        if (path === `/etudiant/${nom}` || path === `/etudiant/${nom}/dashboard`) {
+            return 'Dashboard';
+        }
+        const currentItem = navItems.find((item) => path === item.path);
+        return currentItem ? currentItem.label : 'Tableau de Bord';
     };
 
     return (
@@ -70,7 +74,9 @@ const EtudiantLayout = () => {
 
                 <nav className="sidebar-nav">
                     {navItems.map((item) => {
-                        const isActive = location.pathname === item.path;
+                        const isActive = item.end
+                            ? location.pathname === item.path || location.pathname === `/etudiant/${nom}`
+                            : location.pathname === item.path;
                         return (
                             <Link
                                 key={item.path}

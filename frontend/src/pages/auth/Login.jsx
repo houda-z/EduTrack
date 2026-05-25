@@ -35,7 +35,7 @@ const Login = () => {
         navigate('/formateur/dashboard');
       } else {
         const nom = ((user.prenom || '') + (user.name || '')).toLowerCase().replace(/\s+/g, '');
-        navigate(`/etudiant/${nom}/cours`);
+        navigate(`/etudiant/${nom}/dashboard`);
       }
 
     } catch (err) {

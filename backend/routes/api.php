@@ -8,6 +8,7 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login']);
 Route::get('/filieres', [FiliereController::class, 'index']);
 Route::get('/groupes', [App\Http\Controllers\Api\GroupeController::class, 'index']);
+Route::get('/emploi-du-temps/config', [App\Http\Controllers\Api\EmploiDuTempsController::class, 'config']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -23,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Commentaires — accessible par tous (etudiant + enseignant)
     Route::get('/cours/{id}/commentaires', [App\Http\Controllers\Api\CoursController::class, 'getCommentaires']);
     Route::post('/cours/{id}/commentaires', [App\Http\Controllers\Api\CoursController::class, 'addCommentaire']);
+    Route::get('/cours/{id}/fichiers/{fichierId}/download', [App\Http\Controllers\Api\CoursController::class, 'downloadFichier']);
 
     // Student Dashboard Routes
     Route::prefix('student')->group(function () {

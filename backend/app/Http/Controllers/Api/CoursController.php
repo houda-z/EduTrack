@@ -149,9 +149,7 @@ class CoursController extends Controller
         }
 
         foreach ($course->fichiers as $fichier) {
-            if ($fichier->chemin && !str_starts_with($fichier->chemin, 'http')) {
-                Storage::delete($fichier->chemin);
-            }
+            $this->deleteStoredFile($fichier->chemin);
         }
 
         $course->delete();
@@ -173,15 +171,16 @@ class CoursController extends Controller
         }
 
         if ($request->hasFile('fichier')) {
-            $request->validate(['fichier' => 'required|file|max:10240|mimes:pdf,mp4,mov,avi,jpg,png,jpeg']);
+            $request->validate(['fichier' => 'required|file|max:10240|mimes:pdf,doc,docx,mp4,mov,avi,jpg,png,jpeg']);
 
             $file         = $request->file('fichier');
             $originalName = $file->getClientOriginalName();
-            $path         = $file->storeAs("public/cours/{$id}", $originalName);
+            $path         = $file->storeAs("cours/{$id}", $originalName, 'public');
 
             $ext  = strtolower($file->getClientOriginalExtension());
             $type = match(true) {
                 $ext === 'pdf'                       => 'pdf',
+                in_array($ext, ['doc', 'docx'])      => 'lien',
                 in_array($ext, ['mp4','mov','avi'])  => 'video',
                 in_array($ext, ['jpg','jpeg','png']) => 'image',
                 default                              => 'lien',
@@ -191,7 +190,7 @@ class CoursController extends Controller
                 'nom'   => $originalName,
                 'chemin'=> $path,
                 'type'  => $type,
-                'url'   => Storage::url($path),
+                'url'   => url('/storage/cours/' . $id . '/' . rawurlencode($originalName)),
             ]);
         } else {
             $validated = $request->validate([
@@ -225,8 +224,8 @@ class CoursController extends Controller
             return response()->json(['success' => false, 'message' => 'Action non autorisée.'], 403);
         }
 
-        if ($fichier->chemin && !str_starts_with($fichier->chemin, 'http')) {
-            Storage::delete($fichier->chemin);
+        if ($fichier->chemin && ! str_starts_with($fichier->chemin, 'http')) {
+            Storage::disk('public')->delete($fichier->chemin);
         }
 
         $fichier->delete();
@@ -339,20 +338,109 @@ class CoursController extends Controller
 }
 
 
-    public function servePdf($id, $filename)
+    private function deleteStoredFile(?string $chemin): void
     {
-        $path = storage_path("app/public/cours/{$id}/{$filename}");
-        
-        if (!file_exists($path)) {
+        if (! $chemin || str_starts_with($chemin, 'http')) {
+            return;
+        }
+
+        $relative = str_replace('public/', '', $chemin);
+        Storage::disk('public')->delete($relative);
+    }
+
+    /**
+     * GET /api/cours/{id}/fichiers/{fichierId}/download
+     * Téléchargement direct (auth Sanctum) — évite les 404 liés au nom de fichier.
+     */
+    public function downloadFichier($id, $fichierId)
+    {
+        Course::findOrFail($id);
+        $fichier = CoursFichier::where('cours_id', $id)->findOrFail($fichierId);
+
+        $path = $this->resolveStoredFilePath($fichier, (int) $id);
+
+        if (! $path || ! is_readable($path)) {
+            abort(404, 'Fichier introuvable sur le serveur.');
+        }
+
+        $downloadName = $fichier->resolveFilename() ?? basename($path);
+
+        return response()->download($path, $downloadName);
+    }
+
+    /**
+     * GET /storage/cours/{id}/{filename}?download=1[&fichier_id=]
+     * Affichage inline ou téléchargement forcé pour liens directs.
+     */
+    public function servePdf(Request $request, $id, $filename)
+    {
+        $filename = urldecode($filename);
+        $path = null;
+        $downloadName = $filename;
+
+        if ($request->filled('fichier_id')) {
+            $fichier = CoursFichier::where('cours_id', $id)->find($request->query('fichier_id'));
+            if ($fichier) {
+                $path = $this->resolveStoredFilePath($fichier, (int) $id);
+                $downloadName = $fichier->resolveFilename() ?? $filename;
+            }
+        }
+
+        if (! $path) {
+            $path = $this->resolveStoredFilePathByName((int) $id, $filename);
+        }
+
+        if (! $path || ! is_readable($path)) {
             abort(404, 'Fichier introuvable.');
         }
 
-        $extension = pathinfo($path, PATHINFO_EXTENSION);
-        $contentType = $extension === 'pdf' ? 'application/pdf' : mime_content_type($path);
+        if ($request->boolean('download')) {
+            return response()->download($path, $downloadName);
+        }
+
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        $contentType = match ($extension) {
+            'pdf'  => 'application/pdf',
+            'doc'  => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            default => mime_content_type($path) ?: 'application/octet-stream',
+        };
+
+        $safeName = str_replace(['"', "\r", "\n"], '', $downloadName);
 
         return response()->file($path, [
             'Content-Type' => $contentType,
-            'Content-Disposition' => 'inline; filename="' . $filename . '"'
+            'Content-Disposition' => 'inline; filename="' . $safeName . '"',
         ]);
+    }
+
+    private function resolveStoredFilePath(CoursFichier $fichier, int $coursId): ?string
+    {
+        if ($fichier->chemin && ! str_starts_with($fichier->chemin, 'http')) {
+            $relative = str_replace('public/', '', $fichier->chemin);
+            if (Storage::disk('public')->exists($relative)) {
+                return Storage::disk('public')->path($relative);
+            }
+        }
+
+        $name = $fichier->resolveFilename();
+        if ($name) {
+            return $this->resolveStoredFilePathByName($coursId, $name);
+        }
+
+        return null;
+    }
+
+    private function resolveStoredFilePathByName(int $coursId, string $filename): ?string
+    {
+        $relative = "cours/{$coursId}/{$filename}";
+
+        if (Storage::disk('public')->exists($relative)) {
+            return Storage::disk('public')->path($relative);
+        }
+
+        $absolute = storage_path("app/public/cours/{$coursId}/{$filename}");
+
+        return file_exists($absolute) ? $absolute : null;
     }
 }

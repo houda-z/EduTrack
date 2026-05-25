@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 import Home from './pages/Home';
 import Login from './pages/auth/Login';
@@ -41,7 +41,7 @@ function App() {
           <Route path="/etudiant/:nom/en-ligne" element={<ExamenEnLigne />} />
           
           <Route path="/etudiant/:nom" element={<EtudiantLayout />}>
-            <Route index element={<DashboardEtudiant />} />
+            <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<DashboardEtudiant />} />
             <Route path="cours" element={<MesCours />} />
             <Route path="emploi" element={<EmploiDuTemps />} />

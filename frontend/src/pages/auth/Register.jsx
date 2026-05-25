@@ -87,7 +87,7 @@ const Register = () => {
         localStorage.setItem('user_token', token);
         localStorage.setItem('user_data', JSON.stringify(user));
         const nom = (user.prenom + user.name).toLowerCase().replace(/\s+/g, '');
-        navigate(`/etudiant/${nom}/cours`);
+        navigate(`/etudiant/${nom}/dashboard`);
       }
     } catch (err) {
       if (err.response && err.response.status === 422) {

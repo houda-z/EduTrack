@@ -4,6 +4,119 @@ import { useParams } from 'react-router-dom';
 import api from '../../services/api';
 import './MesCours.css';
 
+/** URL du serveur Laravel (sans /api) — ex. http://127.0.0.1:8000 */
+const getBackendBaseUrl = () => {
+    const apiUrl = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000/api';
+    return apiUrl.replace(/\/api\/?$/, '');
+};
+
+/**
+ * Construit l'URL de téléchargement pour l'espace étudiant.
+ * Fichiers stockés : {base}/storage/cours/{coursId}/{nom}?download=1
+ * ou {base}/storage/{chemin relatif}?download=1
+ */
+const getStudentDownloadUrl = (file, coursId) => {
+    if (!file || !coursId) return null;
+
+    const base = getBackendBaseUrl();
+
+    if (file.chemin && (file.chemin.startsWith('http://') || file.chemin.startsWith('https://'))) {
+        return file.chemin;
+    }
+
+    const filename = file.nom || (file.chemin ? file.chemin.split('/').pop() : null);
+    if (filename) {
+        let url = `${base}/storage/cours/${coursId}/${encodeURIComponent(filename)}?download=1`;
+        if (file.id) {
+            url += `&fichier_id=${file.id}`;
+        }
+        return url;
+    }
+
+    if (file.chemin) {
+        const relativePath = file.chemin.replace(/^public\//, '');
+        let url = `${base}/storage/${relativePath}?download=1`;
+        if (file.id) {
+            url += `&fichier_id=${file.id}`;
+        }
+        return url;
+    }
+
+    return null;
+};
+
+/**
+ * Téléchargement direct sur le PC (sans nouvel onglet).
+ * Priorité : API authentifiée (fiable) puis lien Laravel ?download=1
+ */
+const triggerStudentDownload = async (file, coursId, event) => {
+    event?.preventDefault();
+
+    const filename = getStudentDownloadFilename(file);
+
+    if (file?.id && coursId) {
+        try {
+            const response = await api.get(`/cours/${coursId}/fichiers/${file.id}/download`, {
+                responseType: 'blob',
+            });
+
+            const blob = new Blob([response.data]);
+            const blobUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = filename;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+            return;
+        } catch (err) {
+            console.warn('Téléchargement API échoué, repli sur URL directe:', err);
+        }
+    }
+
+    const directUrl = getStudentDownloadUrl(file, coursId);
+    if (!directUrl) {
+        alert('Impossible de télécharger ce fichier : URL introuvable.');
+        return;
+    }
+
+    const link = document.createElement('a');
+    link.href = directUrl;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+/** URL d'affichage (PDF dans un nouvel onglet, sans forcer le téléchargement) */
+const getStudentViewUrl = (file, coursId) => {
+    if (!file || !coursId) return null;
+
+    const base = getBackendBaseUrl();
+
+    if (file.chemin && (file.chemin.startsWith('http://') || file.chemin.startsWith('https://'))) {
+        return file.chemin;
+    }
+
+    const filename = file.nom || (file.chemin ? file.chemin.split('/').pop() : null);
+    if (filename) {
+        return `${base}/storage/cours/${coursId}/${encodeURIComponent(filename)}`;
+    }
+
+    if (file.chemin) {
+        const relativePath = file.chemin.replace(/^public\//, '');
+        return `${base}/storage/${relativePath}`;
+    }
+
+    return null;
+};
+
+const getStudentDownloadFilename = (file) =>
+    file?.nom || (file?.chemin ? file.chemin.split('/').pop() : 'fichier');
+
 const MesCours = () => {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -75,35 +188,6 @@ const MesCours = () => {
         return `${user.prenom?.charAt(0) || ''}${user.name?.charAt(0) || ''}`.toUpperCase() || 'U';
     };
 
-    const getFileUrl = (file) => {
-        if (file.url && file.url.startsWith('http')) return file.url;
-        return `http://127.0.0.1:8000/storage/${file.chemin}`;
-    };
-
-    const openPdfViewer = (file) => {
-        window.open(getFileUrl(file), '_blank');
-    };
-
-    const handleDownload = async (file) => {
-        const fileUrl = getFileUrl(file);
-        try {
-            const response = await fetch(fileUrl);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const blob = await response.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = blobUrl;
-            link.download = file.nom || 'Document.pdf';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(blobUrl);
-        } catch (error) {
-            console.error('Download failed, using fallback:', error);
-            window.open(fileUrl, '_blank');
-        }
-    };
-
 
 
     if (loading) return (
@@ -161,9 +245,12 @@ const MesCours = () => {
                 {selectedCours.fichiers && selectedCours.fichiers.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                         {selectedCours.fichiers.map((f, i) => {
-                            const isPdf = f.type === 'pdf' || (f.nom && f.nom.toLowerCase().endsWith('.pdf')) || (f.url && f.url.toLowerCase().endsWith('.pdf'));
+                            const isPdf = f.type === 'pdf' || (f.nom && f.nom.toLowerCase().endsWith('.pdf')) || (f.url && f.url.toLowerCase().includes('.pdf'));
                             const isVideo = f.type === 'video';
-                            const fileUrl = f.url || `http://127.0.0.1:8000/storage/${f.chemin}`;
+                            const viewUrl = getStudentViewUrl(f, selectedCours.id);
+                            const downloadUrl = getStudentDownloadUrl(f, selectedCours.id);
+                            const downloadName = getStudentDownloadFilename(f);
+                            const showPreview = isPdf && viewUrl;
                             
                             return (
                             <div key={f.id || i} className="group bg-white/5 border border-white/10 hover:border-cyan-500/30 rounded-xl p-4 flex items-center gap-4 transition-all hover:bg-white/10 shadow-sm">
@@ -177,33 +264,39 @@ const MesCours = () => {
                                     <p className="text-xs text-[#94a3b8] uppercase tracking-wider mt-0.5">{f.type || 'Fichier'}</p>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    {isPdf ? (
-                                        <>
-                                            <button 
-                                                onClick={() => openPdfViewer(f)}
-                                                className="p-2 text-[#94a3b8] hover:text-cyan-400 hover:bg-cyan-400/10 rounded-lg transition-colors"
-                                                title="Lire"
-                                            >
-                                                <Eye size={18} />
-                                            </button>
-                                            <button 
-                                                onClick={() => handleDownload(f)}
-                                                className="p-2 text-[#94a3b8] hover:text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-colors"
-                                                title="Télécharger"
-                                            >
-                                                <Download size={18} />
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <a 
-                                            href={fileUrl}
+                                    {showPreview && (
+                                        <a
+                                            href={viewUrl}
                                             target="_blank"
-                                            rel="noreferrer"
-                                            className="p-2 text-[#94a3b8] hover:text-cyan-400 hover:bg-cyan-400/10 rounded-lg transition-colors"
-                                            title="Ouvrir le lien"
+                                            rel="noopener noreferrer"
+                                            className="p-2 text-[#94a3b8] hover:text-cyan-400 hover:bg-cyan-400/10 rounded-lg transition-colors inline-flex"
+                                            title="Ouvrir le PDF dans un nouvel onglet"
                                         >
-                                            <ExternalLink size={18} />
+                                            <Eye size={18} />
                                         </a>
+                                    )}
+                                    {(downloadUrl || (f.id && selectedCours.id)) ? (
+                                        <a
+                                            href={downloadUrl || '#'}
+                                            download={downloadName}
+                                            onClick={(e) => triggerStudentDownload(f, selectedCours.id, e)}
+                                            className="p-2 text-[#94a3b8] hover:text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-colors inline-flex cursor-pointer"
+                                            title={`Télécharger ${downloadName}`}
+                                        >
+                                            <Download size={18} />
+                                        </a>
+                                    ) : (
+                                        !showPreview && viewUrl && (
+                                            <a
+                                                href={viewUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="p-2 text-[#94a3b8] hover:text-cyan-400 hover:bg-cyan-400/10 rounded-lg transition-colors inline-flex"
+                                                title="Ouvrir le lien"
+                                            >
+                                                <ExternalLink size={18} />
+                                            </a>
+                                        )
                                     )}
                                 </div>
                             </div>
