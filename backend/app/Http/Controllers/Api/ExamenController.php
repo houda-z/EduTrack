@@ -87,6 +87,7 @@ class ExamenController extends Controller
             'questions.*.enonce' => 'required|string',
             'questions.*.type' => 'required|in:qcm,code,texte',
             'questions.*.points' => 'required|numeric',
+            'questions.*.image_base64' => 'nullable|string',
             'questions.*.choix' => 'nullable|array',
             'questions.*.choix.*.texte' => 'required|string',
             'questions.*.choix.*.est_correct' => 'required|boolean',
@@ -115,7 +116,8 @@ class ExamenController extends Controller
                     'enonce' => $qData['enonce'],
                     'type' => $qData['type'],
                     'points' => $qData['points'],
-                    'ordre' => $idx + 1
+                    'ordre' => $idx + 1,
+                    'image_base64' => $qData['image_base64'] ?? null,
                 ]);
                     
 
@@ -205,6 +207,7 @@ class ExamenController extends Controller
             'enonce' => 'required|string',
             'type' => 'required|in:qcm,code,texte',
             'points' => 'required|numeric',
+            'image_base64' => 'nullable|string',
             'choix' => 'nullable|array',
             'choix.*.texte' => 'required|string',
             'choix.*.est_correct' => 'required|boolean',
@@ -216,7 +219,8 @@ class ExamenController extends Controller
                 'enonce' => $validated['enonce'],
                 'type' => $validated['type'],
                 'points' => $validated['points'],
-                'ordre' => $exam->questions()->count() + 1
+                'ordre' => $exam->questions()->count() + 1,
+                'image_base64' => $validated['image_base64'] ?? null,
             ]);
 
             if ($validated['type'] === 'qcm' && !empty($validated['choix'])) {

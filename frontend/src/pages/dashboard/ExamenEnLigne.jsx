@@ -216,6 +216,13 @@ const ExamenEnLigne = () => {
           </div>
 
           <div className="question-body">
+            {currentQuestion.image_base64 && (
+              <img
+                src={currentQuestion.image_base64}
+                alt="question"
+                className="rounded-xl max-h-64 object-contain mb-4 border border-white/10 w-full"
+              />
+            )}
             <p>{currentQuestion.enonce}</p>
 
             {currentQuestion.type === 'qcm' ? (

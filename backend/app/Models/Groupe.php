@@ -18,4 +18,5 @@ class Groupe extends Model
     {
         return $this->belongsToMany(User::class, 'etudiant_groupe', 'groupe_id', 'etudiant_id');
     }
+    public $timestamps = false;
 }

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->enum('type', ['qcm', 'code', 'texte'])->default('texte');
             $table->float('points')->default(1);
             $table->unsignedInteger('ordre')->default(1);
+            $table->longText('image_base64')->nullable();
             $table->dateTime('created_at')->useCurrent();
 
             $table->foreign('examen_id')

@@ -338,5 +338,21 @@ class CoursController extends Controller
     ]);
 }
 
-    
+
+    public function servePdf($id, $filename)
+    {
+        $path = storage_path("app/public/cours/{$id}/{$filename}");
+        
+        if (!file_exists($path)) {
+            abort(404, 'Fichier introuvable.');
+        }
+
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
+        $contentType = $extension === 'pdf' ? 'application/pdf' : mime_content_type($path);
+
+        return response()->file($path, [
+            'Content-Type' => $contentType,
+            'Content-Disposition' => 'inline; filename="' . $filename . '"'
+        ]);
+    }
 }

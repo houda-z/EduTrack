@@ -13,7 +13,7 @@ return new class extends Migration
             $table->unsignedBigInteger('formateur_id');
             $table->unsignedBigInteger('groupe_id');
             $table->string('titre', 255);
-            $table->enum('jour', ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi']);
+            $table->enum('jour', ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi']);
             $table->time('heure_debut');
             $table->time('heure_fin');
             $table->string('salle', 100)->nullable();

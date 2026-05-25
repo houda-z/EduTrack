@@ -41,3 +41,6 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// Route custom pour forcer le téléchargement/affichage des fichiers du cours avec le bon Content-Type (CORS fallback)
+Route::get('/storage/cours/{id}/{filename}', [App\Http\Controllers\Api\CoursController::class, 'servePdf']);

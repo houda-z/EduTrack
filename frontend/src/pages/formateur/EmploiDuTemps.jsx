@@ -28,6 +28,10 @@ const EmploiDuTemps = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSession, setEditingSession] = useState(null);
 
+  // Créneaux disponibles panel
+  const [showSlots, setShowSlots] = useState(false);
+  const standardSlots = ['08:00-10:00', '10:00-12:00', '12:00-14:00', '14:00-16:00', '16:00-18:00'];
+
   // Session Form State
   const [titre, setTitre] = useState('');
   const [jour, setJour] = useState('lundi');
@@ -36,7 +40,7 @@ const EmploiDuTemps = () => {
   const [salle, setSalle] = useState('');
   const [typeSession, setTypeSession] = useState('cours');
 
-  const daysOfWeek = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi'];
+  const daysOfWeek = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
 
   const fetchMetadata = async () => {
     try {
@@ -165,15 +169,27 @@ const EmploiDuTemps = () => {
     }
   };
 
-  const handleOpenAddModal = (day = 'lundi') => {
+  const handleOpenAddModal = (day = 'lundi', preDebut = '08:00', preFin = '10:00') => {
     setEditingSession(null);
     setTitre('');
     setJour(day);
-    setHeureDebut('08:00');
-    setHeureFin('10:00');
+    setHeureDebut(preDebut);
+    setHeureFin(preFin);
     setSalle('');
     setTypeSession('cours');
+    setShowSlots(false);
     setIsModalOpen(true);
+  };
+
+  const isSlotOccupied = (day, slotStr) => {
+    const [slotStart, slotEnd] = slotStr.split('-');
+    return sessions.find(s => {
+      if (s.jour.toLowerCase() !== day.toLowerCase()) return false;
+      const sessStart = formatTime(s.heure_debut);
+      const sessEnd = formatTime(s.heure_fin);
+      // overlap: session starts before slot ends AND session ends after slot starts
+      return sessStart < slotEnd && sessEnd > slotStart;
+    }) || null;
   };
 
   const formatTime = (timeStr) => {
@@ -210,13 +226,26 @@ const EmploiDuTemps = () => {
         </div>
 
         {selectedGroupeId && (
-          <button
-            onClick={() => handleOpenAddModal()}
-            className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-xs font-bold shadow-[0_0_15px_rgba(34,211,238,0.2)] transition-all self-start sm:self-auto"
-          >
-            <PlusCircle size={15} />
-            Ajouter un Cours/TP
-          </button>
+          <div className="flex items-center gap-3 self-start sm:self-auto flex-wrap">
+            <button
+              onClick={() => setShowSlots(prev => !prev)}
+              className={`flex items-center justify-center gap-2 px-5 py-3 rounded-xl border text-xs font-bold transition-all ${
+                showSlots
+                  ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                  : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+              }`}
+            >
+              <Sliders size={15} />
+              Créneaux disponibles
+            </button>
+            <button
+              onClick={() => handleOpenAddModal()}
+              className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-xs font-bold shadow-[0_0_15px_rgba(34,211,238,0.2)] transition-all"
+            >
+              <PlusCircle size={15} />
+              Ajouter un Cours/TP
+            </button>
+          </div>
         )}
       </div>
 
@@ -259,6 +288,45 @@ const EmploiDuTemps = () => {
         </div>
       )}
 
+      {/* Créneaux disponibles panel */}
+      {showSlots && selectedGroupeId && !loading && (
+        <div className="p-5 rounded-2xl bg-white/3 border border-white/10 backdrop-blur-md shadow-xl space-y-5">
+          <h3 className="text-xs font-black uppercase tracking-widest text-slate-300">Créneaux de la semaine</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            {daysOfWeek.map(day => (
+              <div key={day} className="space-y-2">
+                <p className="text-[10px] font-extrabold uppercase tracking-widest text-cyan-400 border-b border-white/5 pb-1.5">{day}</p>
+                {standardSlots.map(slot => {
+                  const occupied = isSlotOccupied(day, slot);
+                  const [slotStart, slotEnd] = slot.split('-');
+                  return (
+                    <div
+                      key={slot}
+                      className={`px-3 py-2 rounded-xl border text-[10px] font-bold flex items-center justify-between gap-2 ${
+                        occupied
+                          ? 'bg-red-500/10 border-red-500/20 text-red-300'
+                          : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
+                      }`}
+                    >
+                      <span className="truncate">{occupied ? occupied.titre : slot}</span>
+                      {!occupied && (
+                        <button
+                          onClick={() => handleOpenAddModal(day, slotStart, slotEnd)}
+                          className="shrink-0 p-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 transition-colors"
+                          title={`Ajouter un cours ${slot}`}
+                        >
+                          <Plus size={11} />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Calendar View */}
       {!selectedGroupeId ? (
         <div className="p-12 text-center text-slate-500 font-bold border border-dashed border-white/10 rounded-2xl bg-white/2">
@@ -271,7 +339,7 @@ const EmploiDuTemps = () => {
         </div>
       ) : (
         /* Calendar Days List columns */
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
           {daysOfWeek.map(day => {
             const daySessions = getSessionsForDay(day);
 

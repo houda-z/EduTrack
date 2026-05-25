@@ -52,6 +52,7 @@ const Examens = () => {
     { texte: '', est_correct: false }
   ]);
   const [currentExpectedOutput, setCurrentExpectedOutput] = useState('');
+  const [currentQuestionImage, setCurrentQuestionImage] = useState(null); // base64 for wizard
 
   // For adding questions to existing exam
   const [addQuestionText, setAddQuestionText] = useState('');
@@ -64,6 +65,7 @@ const Examens = () => {
     { texte: '', est_correct: false }
   ]);
   const [addQuestionExpectedOutput, setAddQuestionExpectedOutput] = useState('');
+  const [addQuestionImage, setAddQuestionImage] = useState(null); // base64 for add modal
   const [addingQuestion, setAddingQuestion] = useState(false);
   const [addQuestionMessage, setAddQuestionMessage] = useState(null);
 
@@ -164,7 +166,8 @@ const Examens = () => {
       type: currentQuestionType,
       points: parseFloat(currentQuestionPoints) || 1,
       choix: [],
-      expected_output: ''
+      expected_output: '',
+      ...(currentQuestionImage ? { image_base64: currentQuestionImage } : {})
     };
 
     if (currentQuestionType === 'qcm') {
@@ -198,12 +201,20 @@ const Examens = () => {
     setCurrentQuestionPoints('1');
     setCurrentQuestionType('qcm');
     setCurrentExpectedOutput('');
+    setCurrentQuestionImage(null);
     setCurrentChoices([
       { texte: '', est_correct: false },
       { texte: '', est_correct: false },
       { texte: '', est_correct: false },
       { texte: '', est_correct: false }
     ]);
+  };
+
+  const handleImageToBase64 = (file, setter) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setter(reader.result);
+    reader.readAsDataURL(file);
   };
 
   const handleRemoveQuestionFromWizard = (idx) => {
@@ -295,6 +306,7 @@ const Examens = () => {
     setAddQuestionType('qcm');
     setAddQuestionPoints('1');
     setAddQuestionExpectedOutput('');
+    setAddQuestionImage(null);
     setAddQuestionChoices([
       { texte: '', est_correct: false },
       { texte: '', est_correct: false },
@@ -322,7 +334,8 @@ const Examens = () => {
     let payload = {
       enonce: addQuestionText,
       type: addQuestionType,
-      points: parseFloat(addQuestionPoints) || 1
+      points: parseFloat(addQuestionPoints) || 1,
+      ...(addQuestionImage ? { image_base64: addQuestionImage } : {})
     };
 
     if (addQuestionType === 'qcm') {
@@ -460,10 +473,10 @@ const Examens = () => {
                       </div>
 
                       <span className={`px-2 py-0.5 rounded text-[8.5px] font-extrabold tracking-widest uppercase ${exam.statut === 'publie' || exam.statut === 'actif'
-                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                          : exam.statut === 'termine'
-                            ? 'bg-slate-500/20 text-slate-300 border border-slate-500/30'
-                            : 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        : exam.statut === 'termine'
+                          ? 'bg-slate-500/20 text-slate-300 border border-slate-500/30'
+                          : 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30'
                         }`}>
                         {exam.statut}
                       </span>
@@ -626,10 +639,10 @@ const Examens = () => {
                             </td>
                             <td className="py-3.5 px-2">
                               <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase ${row.statut === 'soumis'
-                                  ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
-                                  : row.statut === 'bloque'
-                                    ? 'bg-red-500/10 text-red-300 border border-red-500/20'
-                                    : 'bg-yellow-500/10 text-yellow-300 border border-yellow-500/20'
+                                ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+                                : row.statut === 'bloque'
+                                  ? 'bg-red-500/10 text-red-300 border border-red-500/20'
+                                  : 'bg-yellow-500/10 text-yellow-300 border border-yellow-500/20'
                                 }`}>
                                 {row.statut}
                               </span>
@@ -840,6 +853,23 @@ const Examens = () => {
                   </div>
                 </div>
 
+                {/* Image upload — wizard */}
+                <div className="space-y-1 pt-1">
+                  <label className="text-[10px] text-slate-500 font-bold uppercase">Image illustrative (optionnelle)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageToBase64(e.target.files[0], setCurrentQuestionImage)}
+                    className="block w-full text-[11px] text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-cyan-500/10 file:text-cyan-300 file:font-bold hover:file:bg-cyan-500/20 file:cursor-pointer cursor-pointer"
+                  />
+                  {currentQuestionImage && (
+                    <div className="relative mt-2 inline-block">
+                      <img src={currentQuestionImage} alt="preview" className="max-h-28 rounded-lg border border-white/10 object-contain" />
+                      <button type="button" onClick={() => setCurrentQuestionImage(null)} className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500/80 text-white text-xs flex items-center justify-center hover:bg-red-500">×</button>
+                    </div>
+                  )}
+                </div>
+
                 {/* Conditional choices based on format */}
                 {currentQuestionType === 'qcm' ? (
                   <div className="space-y-3 pt-2">
@@ -961,8 +991,8 @@ const Examens = () => {
             {/* Status message */}
             {addQuestionMessage && (
               <div className={`p-3 rounded-lg border text-xs font-bold flex items-center gap-2 ${addQuestionMessage.type === 'error'
-                  ? 'bg-red-500/10 border-red-500/30 text-red-300'
-                  : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                ? 'bg-red-500/10 border-red-500/30 text-red-300'
+                : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
                 }`}>
                 <span className={`w-2 h-2 rounded-full ${addQuestionMessage.type === 'error' ? 'bg-red-400' : 'bg-emerald-400'} animate-pulse`}></span>
                 {addQuestionMessage.text}
@@ -1008,6 +1038,23 @@ const Examens = () => {
                     </select>
                   </div>
                 </div>
+              </div>
+
+              {/* Image upload — add question modal */}
+              <div className="space-y-1 pt-1">
+                <label className="text-[10px] text-slate-500 font-bold uppercase">Image illustrative (optionnelle)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageToBase64(e.target.files[0], setAddQuestionImage)}
+                  className="block w-full text-[11px] text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-cyan-500/10 file:text-cyan-300 file:font-bold hover:file:bg-cyan-500/20 file:cursor-pointer cursor-pointer"
+                />
+                {addQuestionImage && (
+                  <div className="relative mt-2 inline-block">
+                    <img src={addQuestionImage} alt="preview" className="max-h-28 rounded-lg border border-white/10 object-contain" />
+                    <button type="button" onClick={() => setAddQuestionImage(null)} className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500/80 text-white text-xs flex items-center justify-center hover:bg-red-500">×</button>
+                  </div>
+                )}
               </div>
 
               {/* Conditional fields based on question type */}

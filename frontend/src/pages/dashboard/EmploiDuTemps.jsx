@@ -4,7 +4,7 @@ import api from '../../services/api';
 import './EmploiDuTemps.css';
 
 const EmploiDuTemps = () => {
-    const days = ["lundi", "mardi", "mercredi", "jeudi", "vendredi"];
+    const days = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
 
     const [schedule, setSchedule] = useState([]);
     const [loading, setLoading] = useState(true);
