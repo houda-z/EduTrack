@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Examen extends Model
 {
     protected $table = 'examens';
-    protected $fillable = ['titre', 'type', 'statut', 'formateur_id', 'enseignant_id', 'filiere_id', 'groupe_id', 'duree', 'date_debut', 'date_fin', 'duree_minutes', 'date_examen'];
+    protected $fillable = ['titre', 'introduction', 'type', 'statut', 'formateur_id', 'enseignant_id', 'filiere_id', 'groupe_id', 'duree', 'date_debut', 'date_fin', 'duree_minutes', 'date_examen'];
 
     public function groupe()
     {
@@ -34,9 +34,19 @@ class Examen extends Model
         return $this->hasMany(Question::class);
     }
 
+    public function parties()
+    {
+        return $this->hasMany(Partie::class)->orderBy('ordre');
+    }
+
     public function sessions()
     {
         return $this->hasMany(SessionExamen::class, 'examen_id');
+    }
+
+    public function reponses()
+    {
+        return $this->hasMany(ExamenReponse::class, 'examen_id');
     }
 
     public function notes()

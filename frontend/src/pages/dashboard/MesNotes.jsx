@@ -4,7 +4,8 @@ import api from '../../services/api';
 import './MesNotes.css';
 
 const MesNotes = () => {
-    const [notes, setNotes] = useState([]);
+    const [examNotes, setExamNotes] = useState([]);
+    const [manualNotes, setManualNotes] = useState([]);
     const [moyenne, setMoyenne] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -21,26 +22,34 @@ const MesNotes = () => {
             const user = JSON.parse(localStorage.getItem('user'));
             if (!user || !user.id) {
                 setError('Données utilisateur non disponibles');
-                setNotes([]);
+                setExamNotes([]);
+                setManualNotes([]);
                 setLoading(false);
                 return;
             }
 
             const response = await api.get(`/notes/etudiant/${user.id}`);
             if (response.data && response.data.success && response.data.data) {
-                setNotes(response.data.data);
+                const data = response.data.data;
+                if (Array.isArray(data)) {
+                    setExamNotes([]);
+                    setManualNotes(data);
+                    setMoyenne(user.moyenne ?? 0);
+                } else {
+                    setExamNotes(data.exam_notes || []);
+                    setManualNotes(data.manual_notes || []);
+                    setMoyenne(data.moyenne || 0);
+                }
             } else {
-                setNotes([]);
-            }
-
-            // Get moyenne from localStorage
-            if (user.moyenne !== undefined) {
-                setMoyenne(user.moyenne);
+                setExamNotes([]);
+                setManualNotes([]);
+                setMoyenne(0);
             }
         } catch (err) {
             console.error('Error fetching notes:', err);
             setError('Erreur lors du chargement des notes');
-            setNotes([]);
+            setExamNotes([]);
+            setManualNotes([]);
         } finally {
             setLoading(false);
         }
@@ -92,50 +101,55 @@ const MesNotes = () => {
                         <Target className="text-cyan" />
                         <div>
                             <span className="label">Évaluations</span>
-                            <span className="value">{notes.length}</span>
+                            <span className="value">{examNotes.length + manualNotes.length}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {notes.length === 0 ? (
+            {examNotes.length + manualNotes.length === 0 ? (
                 <div style={{ color: '#94a3b8', textAlign: 'center', padding: '40px 20px' }}>
                     <p style={{ fontSize: '16px', fontWeight: 'bold' }}>Aucune note disponible</p>
                     <p style={{ fontSize: '13px', marginTop: '8px' }}>Vos notes apparaîtront ici une fois évaluées.</p>
                 </div>
             ) : (
-                <div className="grades-table-container glass-glow">
-                    <div className="table-header">
-                        <div className="table-title">
-                            <FileText size={20} />
-                            <h3>Détail des Résultats</h3>
-                        </div>
-                        <div className="semester-badge">Résultats</div>
+                <>
+                    <div className="notes-section glass-glow">
+                        <h3 className="section-title">Notes des Examens</h3>
+                        {examNotes.length === 0 ? (
+                            <p className="empty">Aucune note d'examen disponible.</p>
+                        ) : examNotes.map((note, i) => (
+                            <div key={i} className="note-card">
+                                <div className="note-info">
+                                    <span className="note-titre">{note.examen_titre}</span>
+                                    <span className="note-date">{formatDate(note.created_at)}</span>
+                                </div>
+                                <div className="note-score">
+                                    <span className={note.note >= note.total_points * 0.5 ? 'score-good' : 'score-bad'}>
+                                        {note.note} / {note.total_points}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
 
-                    <table className="grades-table">
-                        <thead>
-                            <tr>
-                                <th>Sujet</th>
-                                <th>Note /20</th>
-                                <th>Commentaire</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {notes.map((note) => (
-                                <tr key={note.id}>
-                                    <td className="module-name">
-                                        {note.examen?.titre || note.cours?.titre || 'Évaluation'}
-                                    </td>
-                                    <td className="grade-value pass">{note.note}</td>
-                                    <td className="comment">{note.commentaire || '-'}</td>
-                                    <td>{formatDate(note.created_at)}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                    <div className="notes-section glass-glow">
+                        <h3 className="section-title">Notes Manuelles</h3>
+                        {manualNotes.length === 0 ? (
+                            <p className="empty">Aucune note manuelle.</p>
+                        ) : manualNotes.map((note, i) => (
+                            <div key={i} className="note-card">
+                                <div className="note-info">
+                                    <span className="note-titre">{note.examen_titre || note.cours_titre || 'Note'}</span>
+                                    {note.commentaire && <span className="note-comment">{note.commentaire}</span>}
+                                </div>
+                                <div className="note-score">
+                                    <span className="score-good">{note.note} / 20</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </>
             )}
 
             <div className="info-box-cyber">

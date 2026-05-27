@@ -17,6 +17,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // General Auth Routes for both student & teacher
     Route::get('/cours', [App\Http\Controllers\Api\CoursController::class, 'index']);
     Route::get('/examens', [App\Http\Controllers\Api\ExamenController::class, 'index']);
+    Route::get('/examens/{id}', [App\Http\Controllers\Api\ExamenController::class, 'show']);
+    Route::post('/examens/{id}/soumettre', [App\Http\Controllers\Api\ExamenController::class, 'soumettreExam']);
     Route::get('/emploi-du-temps', [App\Http\Controllers\Api\EmploiDuTempsController::class, 'index']);
 
     
@@ -39,6 +41,14 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Formateur (Enseignant) Routes
+    Route::get('/formateur/examens-correction', [App\Http\Controllers\Api\ExamenController::class, 'getExamensPourCorrection']);
+    Route::get('/formateur/examens/{exam_id}/groupes/{groupe_id}/etudiants', [App\Http\Controllers\Api\ExamenController::class, 'getEtudiantsReponses']);
+    Route::get('/formateur/examens/{exam_id}/etudiants', [App\Http\Controllers\Api\ExamenController::class, 'getEtudiantsReponses']);
+    Route::post('/formateur/reponses/noter', [App\Http\Controllers\Api\ExamenController::class, 'noterReponsesQuestion']);
+    Route::post('/examens/{id}/bloquer-session', [App\Http\Controllers\Api\ExamenController::class, 'bloquerSession']);
+    Route::get('/examens/{id}/ma-session', [App\Http\Controllers\Api\ExamenController::class, 'getMaSession']);
+    Route::get('/notes/etudiant/{id}', [App\Http\Controllers\Api\NoteController::class, 'getStudentNotes']);
+
     Route::middleware('role:enseignant')->group(function () {
         // Profil / Stats
         Route::get('/formateur/profil', [App\Http\Controllers\Api\FormateurController::class, 'getProfil']);
@@ -65,8 +75,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Notes / Grading
         Route::post('/notes', [App\Http\Controllers\Api\NoteController::class, 'store']);
-        Route::get('/notes/etudiant/{id}', [App\Http\Controllers\Api\NoteController::class, 'getStudentNotes']);
         Route::put('/notes/{id}', [App\Http\Controllers\Api\NoteController::class, 'update']);
+        Route::patch('/sessions/{id}/debloquer', [App\Http\Controllers\Api\ExamenController::class, 'debloquerSession']);
 
         // Emploi du temps Write Operations
         Route::post('/emploi-du-temps', [App\Http\Controllers\Api\EmploiDuTempsController::class, 'store']);

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ExamenReponse;
 use App\Models\Note;
+use App\Models\SessionExamen;
 use App\Models\User;
 use App\Services\MoyenneService;
 use Illuminate\Http\Request;
@@ -91,23 +93,57 @@ class NoteController extends Controller
     {
         $authUser = $request->user();
 
-        // Students can only read their own notes
-        if ($authUser->role === 'etudiant' && $authUser->id != $id) {
+        if ($authUser->role === 'etudiant' && $authUser->id != (int) $id) {
             return response()->json(['success' => false, 'message' => 'Accès refusé.'], 403);
         }
 
-        $notes = Note::where('etudiant_id', $id)
-            ->with([
-                'cours:id,titre',
-                'examen:id,titre,coefficient,date_examen',
-                'formateur:id,name,prenom',
-            ])
-            ->orderByDesc('created_at')
+        $examNotes = ExamenReponse::where('etudiant_id', $id)
+            ->whereNotNull('note_attribuee')
+            ->with(['question:id,enonce,type,points', 'question.examen:id,titre'])
+            ->get()
+            ->groupBy('examen_id')
+            ->map(function ($reponses, $examId) {
+                $totalNote = $reponses->sum('note_attribuee');
+                $totalPoints = $reponses->sum(fn ($r) => $r->question?->points ?? 1);
+                $examTitre = $reponses->first()?->question?->examen?->titre ?? 'Examen';
+
+                return [
+                    'examen_id' => $examId,
+                    'examen_titre' => $examTitre,
+                    'note' => $totalNote,
+                    'total_points' => $totalPoints,
+                    'type' => 'examen',
+                    'created_at' => $reponses->max('updated_at'),
+                ];
+            })->values();
+
+        $manualNotes = Note::where('etudiant_id', $id)
+            ->with(['examen:id,titre', 'cours:id,titre'])
+            ->get()
+            ->map(function ($note) {
+                return [
+                    'id' => $note->id,
+                    'note' => $note->note,
+                    'commentaire' => $note->commentaire,
+                    'examen_titre' => $note->examen?->titre,
+                    'cours_titre' => $note->cours?->titre,
+                    'type' => 'note',
+                    'created_at' => $note->created_at,
+                ];
+            });
+
+        $session = SessionExamen::where('etudiant_id', $id)
+            ->where('statut', 'corrige')
             ->get();
+        $moyenne = $session->avg('note_totale') ?? 0;
 
         return response()->json([
             'success' => true,
-            'data'    => $notes,
+            'data' => [
+                'exam_notes' => $examNotes,
+                'manual_notes' => $manualNotes,
+                'moyenne' => round($moyenne, 2),
+            ],
             'message' => 'Notes récupérées avec succès.'
         ]);
     }

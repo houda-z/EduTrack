@@ -27,6 +27,7 @@ import FormateurCreerCours from './pages/formateur/CreerCours';
 import FormateurExamens from './pages/formateur/Examens';
 import FormateurEtudiants from './pages/formateur/MesEtudiants';
 import FormateurEmploi from './pages/formateur/EmploiDuTemps';
+import CorrectionExamens from './pages/formateur/CorrectionExamens';
 
 function App() {
   return (
@@ -39,7 +40,7 @@ function App() {
 
           {/* Espace Étudiant — Avec Layout Sci-Fi */}
           <Route path="/etudiant/:nom/en-ligne" element={<ExamenEnLigne />} />
-          
+
           <Route path="/etudiant/:nom" element={<EtudiantLayout />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<DashboardEtudiant />} />
@@ -58,6 +59,7 @@ function App() {
             <Route path="cours" element={<FormateurCours />} />
             <Route path="cours/creer" element={<FormateurCreerCours />} />
             <Route path="examens" element={<FormateurExamens />} />
+            <Route path="correction" element={<CorrectionExamens />} />
             <Route path="etudiants" element={<FormateurEtudiants />} />
             <Route path="emploi-du-temps" element={<FormateurEmploi />} />
           </Route>

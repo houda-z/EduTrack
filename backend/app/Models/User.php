@@ -74,6 +74,16 @@ class User extends Authenticatable
         return $this->hasMany(Note::class, 'etudiant_id');
     }
 
+    public function reponses()
+    {
+        return $this->hasMany(ExamenReponse::class, 'etudiant_id');
+    }
+
+    public function sessions()
+    {
+        return $this->hasMany(SessionExamen::class, 'etudiant_id');
+    }
+
     public function emploiDuTemps()
     {
         return $this->hasMany(EmploiDuTemps::class, 'formateur_id');

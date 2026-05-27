@@ -40,6 +40,106 @@ const Examens = () => {
   const [typeExamen, setTypeExamen] = useState('qcm');
   const [statutExamen, setStatutExamen] = useState('brouillon');
   const [questions, setQuestions] = useState([]);
+  const [introduction, setIntroduction] = useState('');
+  const [parties, setParties] = useState([]);
+
+  const addPartie = () => setParties(prev => [...prev, {
+    titre: '',
+    introduction: '',
+    images: [],
+    tableau: { headers: [], rows: [] },
+    questions: []
+  }]);
+
+  const removePartie = (pIdx) => setParties(prev => prev.filter((_, i) => i !== pIdx));
+
+  const updatePartie = (pIdx, field, value) => setParties(prev =>
+    prev.map((p, i) => i === pIdx ? { ...p, [field]: value } : p)
+  );
+
+  const handlePartieImages = (pIdx, files) => {
+    const promises = Array.from(files).map(f => new Promise(res => {
+      const reader = new FileReader();
+      reader.onloadend = () => res(reader.result);
+      reader.readAsDataURL(f);
+    }));
+    Promise.all(promises).then(imgs => {
+      setParties(prev => prev.map((p, i) => i === pIdx ? { ...p, images: [...p.images, ...imgs] } : p));
+    });
+  };
+
+  const toggleTableau = (pIdx) => setParties(prev => prev.map((p, i) => i === pIdx ? {
+    ...p,
+    tableau: p.tableau.headers.length > 0
+      ? { headers: [], rows: [] }
+      : { headers: ['Colonne 1', 'Colonne 2', 'Colonne 3'], rows: [['', '', '']] }
+  } : p));
+
+  const addTableauColumn = (pIdx) => setParties(prev => prev.map((p, i) => i === pIdx ? {
+    ...p,
+    tableau: {
+      headers: [...p.tableau.headers, `Colonne ${p.tableau.headers.length + 1}`],
+      rows: p.tableau.rows.map(r => [...r, ''])
+    }
+  } : p));
+
+  const removeTableauColumn = (pIdx) => setParties(prev => prev.map((p, i) => i === pIdx ? {
+    ...p,
+    tableau: {
+      headers: p.tableau.headers.slice(0, -1),
+      rows: p.tableau.rows.map(r => r.slice(0, -1))
+    }
+  } : p));
+
+  const addTableauRow = (pIdx) => setParties(prev => prev.map((p, i) => i === pIdx ? {
+    ...p,
+    tableau: {
+      ...p.tableau,
+      rows: [...p.tableau.rows, new Array(p.tableau.headers.length).fill('')]
+    }
+  } : p));
+
+  const removeTableauRow = (pIdx, rIdx) => setParties(prev => prev.map((p, i) => i === pIdx ? {
+    ...p,
+    tableau: { ...p.tableau, rows: p.tableau.rows.filter((_, ri) => ri !== rIdx) }
+  } : p));
+
+  const updateTableauHeader = (pIdx, hIdx, val) => setParties(prev => prev.map((p, i) => i === pIdx ? {
+    ...p, tableau: { ...p.tableau, headers: p.tableau.headers.map((h, hi) => hi === hIdx ? val : h) }
+  } : p));
+
+  const updateTableauCell = (pIdx, rIdx, cIdx, val) => setParties(prev => prev.map((p, i) => i === pIdx ? {
+    ...p, tableau: { ...p.tableau, rows: p.tableau.rows.map((r, ri) => ri === rIdx ? r.map((c, ci) => ci === cIdx ? val : c) : r) }
+  } : p));
+
+  const addQuestionToPartie = (pIdx) => setParties(prev => prev.map((p, i) => i === pIdx ? {
+    ...p, questions: [...p.questions, {
+      enonce: '', type: 'qcm', points: 1, choix: [
+        { texte: '', est_correct: false }, { texte: '', est_correct: false },
+        { texte: '', est_correct: false }, { texte: '', est_correct: false }
+      ]
+    }]
+  } : p));
+
+  const removeQuestion = (pIdx, qIdx) => setParties(prev => prev.map((p, i) => i === pIdx ? {
+    ...p, questions: p.questions.filter((_, qi) => qi !== qIdx)
+  } : p));
+
+  const updateQuestion = (pIdx, qIdx, field, value) => setParties(prev => prev.map((p, i) => i === pIdx ? {
+    ...p, questions: p.questions.map((q, qi) => qi === qIdx ? { ...q, [field]: value } : q)
+  } : p));
+
+  const setCorrectChoice = (pIdx, qIdx, cIdx) => setParties(prev => prev.map((p, i) => i === pIdx ? {
+    ...p, questions: p.questions.map((q, qi) => qi === qIdx ? {
+      ...q, choix: q.choix.map((c, ci) => ({ ...c, est_correct: ci === cIdx }))
+    } : q)
+  } : p));
+
+  const updateChoice = (pIdx, qIdx, cIdx, val) => setParties(prev => prev.map((p, i) => i === pIdx ? {
+    ...p, questions: p.questions.map((q, qi) => qi === qIdx ? {
+      ...q, choix: q.choix.map((c, ci) => ci === cIdx ? { ...c, texte: val } : c)
+    } : q)
+  } : p));
 
   // Question Form Helpers
   const [currentQuestionText, setCurrentQuestionText] = useState('');
@@ -167,7 +267,7 @@ const Examens = () => {
       points: parseFloat(currentQuestionPoints) || 1,
       choix: [],
       expected_output: '',
-      ...(currentQuestionImage ? { image_base64: currentQuestionImage } : {})
+      ...(currentQuestionImage ? { file: currentQuestionImage } : {})
     };
 
     if (currentQuestionType === 'qcm') {
@@ -210,13 +310,17 @@ const Examens = () => {
     ]);
   };
 
-  const handleImageToBase64 = (file, setter) => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => setter(reader.result);
-    reader.readAsDataURL(file);
+  const handleImageToBase64 = (files, setter) => {
+    if (!files || files.length === 0) return;
+    const promises = Array.from(files).map(file => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+    });
+    Promise.all(promises).then(results => setter(results));
   };
-
   const handleRemoveQuestionFromWizard = (idx) => {
     setQuestions(prev => prev.filter((_, i) => i !== idx));
   };
@@ -229,17 +333,55 @@ const Examens = () => {
       return;
     }
 
+    // Validate parties have at least one with questions
+    if (parties.length === 0 || !parties.some(p => p.questions.length > 0)) {
+      alert("Veuillez ajouter au moins une partie avec des questions.");
+      return;
+    }
+
+    // Clean parties data: filter out empty choix and validate QCM questions
+    let cleanedParties;
+    try {
+      cleanedParties = parties.map(partie => ({
+        ...partie,
+        questions: partie.questions.map(q => {
+          // Validate QCM questions have filled choices
+          if (q.type === 'qcm') {
+            const filledChoix = q.choix.filter(c => c.texte && c.texte.trim());
+            if (filledChoix.length === 0) {
+              throw new Error(`Question "${q.enonce}" de type QCM n'a pas de choix valides.`);
+            }
+            if (!filledChoix.some(c => c.est_correct)) {
+              throw new Error(`Question "${q.enonce}" de type QCM n'a pas de bonne réponse.`);
+            }
+            return {
+              ...q,
+              choix: filledChoix
+            };
+          }
+          // For non-QCM, send empty choix array
+          return {
+            ...q,
+            choix: []
+          };
+        })
+      }));
+    } catch (validationErr) {
+      alert("Erreur de validation: " + validationErr.message);
+      return;
+    }
+
     const payload = {
       titre,
+      introduction: introduction || null,
       filiere_id: parseInt(filiereId),
       groupe_id: parseInt(groupeId),
       date_examen: dateExamen,
       duree_minutes: totalMinutes,
       type: typeExamen,
       statut: statutExamen,
-      questions: questions
+      parties: cleanedParties
     };
-
     try {
       const res = await api.post('/examens', payload);
       if (res.data && res.data.success) {
@@ -247,12 +389,14 @@ const Examens = () => {
         setIsCreateModalOpen(false);
         // Reset form
         setTitre('');
+        setIntroduction('');
         setFiliereId('');
         setGroupeId('');
         setDateExamen('');
         setDureeHeures('1');
         setDureeMinutes('0');
         setQuestions([]);
+        setParties([]);
         fetchExams();
       }
     } catch (err) {
@@ -267,13 +411,16 @@ const Examens = () => {
         duree_minutes: totalMinutes,
         type: typeExamen,
         statut: statutExamen,
-        questions: questions
+        questions: questions,
+        parties: parties
       };
       setExams(prev => [mockExam, ...prev]);
       setIsCreateModalOpen(false);
+      setParties([]);
       alert("Examen créé (simulation locale).");
     }
   };
+
 
   const handleDeleteExamen = async (id) => {
     if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet examen ?")) return;
@@ -335,7 +482,7 @@ const Examens = () => {
       enonce: addQuestionText,
       type: addQuestionType,
       points: parseFloat(addQuestionPoints) || 1,
-      ...(addQuestionImage ? { image_base64: addQuestionImage } : {})
+      ...(addQuestionImage ? { file: addQuestionImage } : {})
     };
 
     if (addQuestionType === 'qcm') {
@@ -706,6 +853,18 @@ const Examens = () => {
                 />
               </div>
 
+              <div className="space-y-2 col-span-2">
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                  Introduction / Consignes (optionnel)
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Ex: Lisez attentivement chaque question. Durée: 1h. Documents autorisés: aucun..."
+                  value={introduction}
+                  onChange={(e) => setIntroduction(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-cyan-500 font-semibold resize-none"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest">Filière</label>
@@ -809,141 +968,210 @@ const Examens = () => {
 
             </div>
 
-            {/* Question builder panel */}
-            <div className="p-4 rounded-xl bg-white/2 border border-white/5 space-y-4">
-              <h4 className="font-extrabold text-xs uppercase tracking-wider text-cyan-400 border-b border-white/5 pb-2">Créateur de Questions</h4>
-
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="sm:col-span-2 space-y-1">
-                    <label className="text-[10px] text-slate-500 font-bold uppercase">Énoncé / Consigne</label>
-                    <input
-                      type="text"
-                      placeholder="Tapez la question..."
-                      value={currentQuestionText}
-                      onChange={(e) => setCurrentQuestionText(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-cyan-500"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <label className="text-[10px] text-slate-500 font-bold uppercase">Points</label>
-                      <input
-                        type="number"
-                        min="0.5"
-                        step="0.5"
-                        value={currentQuestionPoints}
-                        onChange={(e) => setCurrentQuestionPoints(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] text-slate-500 font-bold uppercase">Format</label>
-                      <select
-                        value={currentQuestionType}
-                        onChange={(e) => setCurrentQuestionType(e.target.value)}
-                        className="w-full px-2 py-2 rounded-lg bg-slate-800 border border-white/10 text-[11px] text-white focus:outline-none"
-                      >
-                        <option value="qcm">QCM</option>
-                        <option value="code">Code</option>
-                        <option value="texte">Réponse texte libre</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Image upload — wizard */}
-                <div className="space-y-1 pt-1">
-                  <label className="text-[10px] text-slate-500 font-bold uppercase">Image illustrative (optionnelle)</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleImageToBase64(e.target.files[0], setCurrentQuestionImage)}
-                    className="block w-full text-[11px] text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-cyan-500/10 file:text-cyan-300 file:font-bold hover:file:bg-cyan-500/20 file:cursor-pointer cursor-pointer"
-                  />
-                  {currentQuestionImage && (
-                    <div className="relative mt-2 inline-block">
-                      <img src={currentQuestionImage} alt="preview" className="max-h-28 rounded-lg border border-white/10 object-contain" />
-                      <button type="button" onClick={() => setCurrentQuestionImage(null)} className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500/80 text-white text-xs flex items-center justify-center hover:bg-red-500">×</button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Conditional choices based on format */}
-                {currentQuestionType === 'qcm' ? (
-                  <div className="space-y-3 pt-2">
-                    <label className="text-[10px] text-slate-500 font-bold uppercase block">Options de réponses (Sélectionnez la case correcte)</label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {currentChoices.map((choice, idx) => (
-                        <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/2 border border-white/5">
-                          <input
-                            type="radio"
-                            name="correct-choice-radio"
-                            checked={choice.est_correct}
-                            onChange={() => handleChoiceCorrectChange(idx)}
-                            className="cursor-pointer"
-                          />
-                          <input
-                            type="text"
-                            placeholder={`Choix ${idx + 1}...`}
-                            value={choice.texte}
-                            onChange={(e) => handleChoiceTextChange(idx, e.target.value)}
-                            className="flex-1 bg-transparent border-none text-xs text-white placeholder-slate-600 focus:outline-none"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : currentQuestionType === 'code' ? (
-                  <div className="space-y-1 pt-2">
-                    <label className="text-[10px] text-slate-500 font-bold uppercase block">Résultat / Console attendue</label>
-                    <textarea
-                      rows="2"
-                      placeholder="Ex. 42 / Hello World / true..."
-                      value={currentExpectedOutput}
-                      onChange={(e) => setCurrentExpectedOutput(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-cyan-500 font-mono"
-                    />
-                  </div>
-                ) : null}
-
-                <button
-                  type="button"
-                  onClick={handleAddQuestionToWizard}
-                  className="px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-cyan-500/10 hover:border-cyan-500/30 hover:text-cyan-300 text-xs font-bold transition-all flex items-center justify-center gap-1 ml-auto"
-                >
-                  <Plus size={14} />
-                  Insérer Question
+            {/* PARTIES SECTION */}
+            <div className="parties-builder space-y-6">
+              <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
+                <h4 className="text-cyan-400 font-bold text-xs uppercase tracking-widest">
+                  Parties de l'examen ({parties.length})
+                </h4>
+                <button type="button" onClick={addPartie} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 text-xs font-bold text-cyan-300 transition-all">
+                  + Ajouter une Partie
                 </button>
               </div>
-            </div>
 
-            {/* List of currently created wizard questions */}
-            <div className="space-y-3">
-              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest">Questions de l'examen ({questions.length})</label>
+              {parties.map((partie, pIdx) => (
+                <div key={pIdx} className="partie-card p-5 rounded-2xl bg-white/3 border border-white/5 space-y-4">
+                  {/* Partie header */}
+                  <div className="partie-header flex items-center justify-between border-b border-white/5 pb-3">
+                    <span className="text-xs font-extrabold text-indigo-400 uppercase tracking-wider">Partie {pIdx + 1}</span>
+                    <button type="button" onClick={() => removePartie(pIdx)} className="text-red-400 hover:text-red-300 transition-colors p-1">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
 
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                {questions.length === 0 ? (
-                  <div className="py-6 text-center text-xs text-slate-600 font-bold border border-dashed border-white/5 rounded-xl">Aucune question insérée. Utilisez le panneau ci-dessus pour composer l'évaluation.</div>
-                ) : (
-                  questions.map((q, idx) => (
-                    <div key={idx} className="p-3 rounded-lg bg-white/2 border border-white/5 flex items-center justify-between text-xs">
-                      <div>
-                        <span className="font-extrabold text-[10px] text-indigo-400 mr-2">Q{idx + 1} ({q.points} pts) - {q.type.toUpperCase()}</span>
-                        <span className="text-white font-semibold">{q.enonce}</span>
+                  {/* Titre */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Titre de la Partie</label>
+                    <input
+                      type="text"
+                      placeholder="Titre de la partie (ex: Partie Théorique - 10pts)"
+                      value={partie.titre}
+                      onChange={e => updatePartie(pIdx, 'titre', e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500"
+                      required
+                    />
+                  </div>
+
+                  {/* Introduction */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Introduction / Consignes</label>
+                    <textarea
+                      placeholder="Introduction / Consignes de cette partie..."
+                      value={partie.introduction}
+                      onChange={e => updatePartie(pIdx, 'introduction', e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 resize-none"
+                    />
+                  </div>
+
+                  {/* Images upload */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Images d'illustration (optionnel)</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={e => handlePartieImages(pIdx, e.target.files)}
+                      className="block w-full text-[11px] text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-cyan-500/10 file:text-cyan-300 file:font-bold hover:file:bg-cyan-500/20 file:cursor-pointer cursor-pointer"
+                    />
+                    {partie.images.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {partie.images.map((src, i) => (
+                          <div key={i} className="relative inline-block">
+                            <img src={src} style={{ maxHeight: 80 }} alt={`preview-${i}`} className="rounded border border-white/10" />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newImgs = partie.images.filter((_, imgIdx) => imgIdx !== i);
+                                updatePartie(pIdx, 'images', newImgs);
+                              }}
+                              className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500/80 text-white text-[10px] flex items-center justify-center hover:bg-red-500"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
                       </div>
+                    )}
+                  </div>
+
+                  {/* Tableau builder */}
+                  <div className="tableau-builder p-4 rounded-xl bg-white/2 border border-white/5 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tableau structuré (optionnel)</span>
                       <button
                         type="button"
-                        onClick={() => handleRemoveQuestionFromWizard(idx)}
-                        className="text-red-400 hover:text-red-300 p-1"
+                        onClick={() => toggleTableau(pIdx)}
+                        className="text-[10px] font-extrabold text-cyan-400 hover:text-cyan-300 transition-colors"
                       >
-                        <Trash2 size={13} />
+                        {partie.tableau.headers.length > 0 ? 'Supprimer tableau' : '+ Ajouter tableau'}
                       </button>
                     </div>
-                  ))
-                )}
-              </div>
+
+                    {partie.tableau.headers.length > 0 && (
+                      <div className="tableau-editor space-y-3">
+                        {/* Headers row */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          {partie.tableau.headers.map((h, hIdx) => (
+                            <input key={hIdx} value={h}
+                              onChange={e => updateTableauHeader(pIdx, hIdx, e.target.value)}
+                              placeholder={`En-tête ${hIdx + 1}`}
+                              className="px-2 py-1 rounded bg-white/5 border border-white/10 text-[11px] text-white focus:outline-none focus:border-cyan-500" />
+                          ))}
+                          <div className="flex gap-1.5 ml-auto">
+                            <button type="button" onClick={() => addTableauColumn(pIdx)} className="px-2 py-1 rounded bg-white/5 border border-white/10 text-[10px] font-bold text-slate-400 hover:bg-white/10">+</button>
+                            <button type="button" onClick={() => removeTableauColumn(pIdx)} className="px-2 py-1 rounded bg-white/5 border border-white/10 text-[10px] font-bold text-slate-400 hover:bg-white/10">-</button>
+                          </div>
+                        </div>
+
+                        {/* Data rows */}
+                        <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                          {partie.tableau.rows.map((row, rIdx) => (
+                            <div key={rIdx} className="flex gap-2 items-center">
+                              {row.map((cell, cIdx) => (
+                                <input key={cIdx} value={cell}
+                                  onChange={e => updateTableauCell(pIdx, rIdx, cIdx, e.target.value)}
+                                  placeholder={`Cellule ${rIdx + 1},${cIdx + 1}`}
+                                  className="flex-1 px-2 py-1 rounded bg-white/5 border border-white/10 text-[11px] text-white focus:outline-none focus:border-cyan-500" />
+                              ))}
+                              <button type="button" onClick={() => removeTableauRow(pIdx, rIdx)} className="text-red-400 hover:text-red-300 p-1 text-[11px]">✕</button>
+                            </div>
+                          ))}
+                        </div>
+                        <button type="button" onClick={() => addTableauRow(pIdx)} className="px-3 py-1 rounded bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-bold text-indigo-300 hover:bg-indigo-500/20 transition-all">+ Ligne</button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Questions of this partie */}
+                  <div className="partie-questions p-4 rounded-xl bg-white/2 border border-white/5 space-y-4">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Questions de cette partie ({partie.questions.length})</span>
+                      <button
+                        type="button"
+                        onClick={() => addQuestionToPartie(pIdx)}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 text-[10px] font-bold text-indigo-300 transition-all"
+                      >
+                        + Question
+                      </button>
+                    </div>
+
+                    {partie.questions.map((q, qIdx) => (
+                      <div key={qIdx} className="question-item p-3.5 rounded-lg bg-white/2 border border-white/5 space-y-3">
+                        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                          <input
+                            type="text"
+                            placeholder="Énoncé de la question..."
+                            value={q.enonce}
+                            onChange={e => updateQuestion(pIdx, qIdx, 'enonce', e.target.value)}
+                            className="flex-1 w-full px-3 py-1.5 rounded bg-white/5 border border-white/10 text-xs text-white focus:outline-none focus:border-cyan-500 font-semibold"
+                            required
+                          />
+                          <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <select
+                              value={q.type}
+                              onChange={e => updateQuestion(pIdx, qIdx, 'type', e.target.value)}
+                              className="px-2 py-1.5 rounded bg-slate-800 border border-white/10 text-[11px] text-white focus:outline-none"
+                            >
+                              <option value="qcm">QCM</option>
+                              <option value="texte">Texte</option>
+                              <option value="code">Code</option>
+                              <option value="commande">Commande</option>
+                            </select>
+                            <input
+                              type="number"
+                              value={q.points}
+                              min="0.5"
+                              step="0.5"
+                              onChange={e => updateQuestion(pIdx, qIdx, 'points', parseFloat(e.target.value) || 1)}
+                              style={{ width: 60 }}
+                              placeholder="pts"
+                              className="px-2 py-1.5 rounded bg-white/5 border border-white/10 text-xs text-white text-center focus:outline-none"
+                              required
+                            />
+                            <button type="button" onClick={() => removeQuestion(pIdx, qIdx)} className="text-red-400 hover:text-red-300 p-1">✕</button>
+                          </div>
+                        </div>
+
+                        {/* QCM choices */}
+                        {q.type === 'qcm' && (
+                          <div className="choices-grid grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-white/5">
+                            {q.choix.map((c, cIdx) => (
+                              <div key={cIdx} className="flex items-center gap-2 px-3 py-1.5 rounded bg-white/2 border border-white/5">
+                                <input
+                                  type="radio"
+                                  name={`correct-${pIdx}-${qIdx}`}
+                                  checked={c.est_correct}
+                                  onChange={() => setCorrectChoice(pIdx, qIdx, cIdx)}
+                                  className="cursor-pointer"
+                                />
+                                <input
+                                  type="text"
+                                  value={c.texte}
+                                  onChange={e => updateChoice(pIdx, qIdx, cIdx, e.target.value)}
+                                  placeholder={`Choix ${cIdx + 1}`}
+                                  className="flex-1 bg-transparent border-none text-[11px] text-white placeholder-slate-600 focus:outline-none"
+                                  required
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Footer Form Actions */}
@@ -1035,6 +1263,7 @@ const Examens = () => {
                       <option value="qcm">QCM</option>
                       <option value="code">Code</option>
                       <option value="texte">Réponse texte libre</option>
+                      <option value="commande">Commande</option>
                     </select>
                   </div>
                 </div>
@@ -1046,7 +1275,7 @@ const Examens = () => {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleImageToBase64(e.target.files[0], setAddQuestionImage)}
+                  onChange={(e) => handleImageToBase64(e.target.files, setAddQuestionImage)}
                   className="block w-full text-[11px] text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-cyan-500/10 file:text-cyan-300 file:font-bold hover:file:bg-cyan-500/20 file:cursor-pointer cursor-pointer"
                 />
                 {addQuestionImage && (

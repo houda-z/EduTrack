@@ -9,7 +9,7 @@ class SessionExamen extends Model
     protected $table = 'sessions_examen';
     public $timestamps = false;
 
-    protected $fillable = ['etudiant_id', 'examen_id', 'statut', 'debut_at', 'fin_at', 'nb_sorties'];
+    protected $fillable = ['etudiant_id', 'examen_id', 'statut', 'debut_at', 'fin_at', 'nb_sorties', 'note_totale'];
 
     protected $casts = [
         'debut_at' => 'datetime',

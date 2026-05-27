@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  BookOpen, 
-  PlusCircle, 
-  ClipboardList, 
-  Users, 
-  Calendar, 
-  LogOut, 
-  Menu, 
+import {
+  LayoutDashboard,
+  BookOpen,
+  PlusCircle,
+  ClipboardList,
+  Users,
+  Calendar,
+  LogOut,
+  Menu,
   X,
   User,
-  Bell
+  Bell,
+  CheckSquare
 } from 'lucide-react';
 
 const FormateurLayout = () => {
@@ -37,13 +38,14 @@ const FormateurLayout = () => {
     { path: '/formateur/cours', icon: <BookOpen size={20} />, label: 'Mes Cours' },
     { path: '/formateur/cours/creer', icon: <PlusCircle size={20} />, label: 'Créer un Cours' },
     { path: '/formateur/examens', icon: <ClipboardList size={20} />, label: 'Examens' },
+    { path: '/formateur/correction', icon: <CheckSquare size={20} />, label: 'Correction' },
     { path: '/formateur/etudiants', icon: <Users size={20} />, label: 'Mes Étudiants' },
     { path: '/formateur/emploi-du-temps', icon: <Calendar size={20} />, label: 'Emploi du Temps' },
   ];
 
   return (
     <div className="min-h-screen bg-[#0f172a] bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white font-sans flex relative overflow-hidden">
-      
+
       {/* Background radial glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-500/10 rounded-full blur-[140px] pointer-events-none"></div>
@@ -58,15 +60,15 @@ const FormateurLayout = () => {
 
       {/* Sidebar Overlay for Mobile */}
       {isSidebarOpen && (
-        <div 
-          onClick={toggleSidebar} 
+        <div
+          onClick={toggleSidebar}
           className="fixed inset-0 z-35 bg-black/60 backdrop-blur-sm md:hidden"
         ></div>
       )}
 
       {/* Sidebar */}
       <aside className={`fixed md:static inset-y-0 left-0 z-40 w-66 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 bg-white/5 backdrop-blur-xl border-r border-white/10 flex flex-col`}>
-        
+
         {/* Brand header */}
         <div className="p-6 flex items-center gap-3 border-b border-white/5">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-400 to-indigo-600 flex items-center justify-center font-extrabold text-lg shadow-[0_0_15px_rgba(34,211,238,0.3)]">
@@ -86,11 +88,10 @@ const FormateurLayout = () => {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all group ${
-                  isActive
+                className={`flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all group ${isActive
                     ? 'bg-gradient-to-r from-cyan-500/20 to-indigo-500/10 text-cyan-300 border border-cyan-500/30 shadow-[0_0_12px_rgba(34,211,238,0.15)]'
                     : 'text-slate-400 hover:bg-white/5 hover:text-white border border-transparent'
-                }`}
+                  }`}
                 onClick={() => setIsSidebarOpen(false)}
               >
                 <div className={isActive ? 'text-cyan-400' : 'group-hover:text-cyan-400 transition-colors'}>
@@ -116,11 +117,11 @@ const FormateurLayout = () => {
 
       {/* Main Content Viewport */}
       <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
-        
+
         {/* Top Header Navigation */}
         <header className="h-16 border-b border-white/5 backdrop-blur-md bg-[#0f172a]/30 px-6 md:px-10 flex items-center justify-between z-20">
           <div></div>
-          
+
           <div className="flex items-center gap-4">
             {/* Notification bell */}
             <button className="relative p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-all">
