@@ -26,6 +26,7 @@ class CoursController extends Controller
 
         if ($user->role === 'etudiant') {
             $query = Course::with([
+                'module:id,nom,code,filiere_id',
                 'formateur:id,name,prenom',
                 'filiere:id,nom',
                 'groupe:id,nom',
@@ -61,11 +62,12 @@ class CoursController extends Controller
         } elseif ($user->role === 'enseignant') {
             $courses = Course::where('formateur_id', $user->id)
                 ->orWhere('enseignant_id', $user->id)
-                ->with(['filiere:id,nom', 'groupe:id,nom', 'fichiers', 'commentaires'])
+                ->with(['module:id,nom,code,filiere_id', 'formateur:id,name,prenom', 'filiere:id,nom', 'groupe:id,nom', 'fichiers', 'commentaires'])
                 ->orderByDesc('created_at')
                 ->get();
         } else {
             $courses = Course::with([
+                'module:id,nom,code,filiere_id',
                 'formateur:id,name,prenom',
                 'filiere:id,nom',
                 'groupe:id,nom',
@@ -94,6 +96,7 @@ class CoursController extends Controller
             'contenu'    => 'nullable|string',
             'filiere_id' => 'required|exists:filieres,id',
             'groupe_id'  => 'nullable|exists:groupes,id',
+            'module_id'  => 'required|integer|exists:modules,id',
         ]);
 
         $course = Course::create([
@@ -102,13 +105,14 @@ class CoursController extends Controller
             'contenu'      => $validated['contenu'] ?? '',
             'filiere_id'   => $validated['filiere_id'],
             'groupe_id'    => $validated['groupe_id'] ?? null,
+            'module_id'    => $validated['module_id'],
             'enseignant_id'=> $user->id,
             'formateur_id' => $user->id,
         ]);
 
         return response()->json([
             'success' => true,
-            'data'    => $course->load(['filiere', 'groupe', 'fichiers']),
+            'data'    => $course->load(['module:id,nom,code,filiere_id', 'filiere', 'groupe', 'fichiers']),
             'message' => 'Cours créé avec succès.'
         ]);
     }
@@ -128,13 +132,21 @@ class CoursController extends Controller
             'contenu'    => 'nullable|string',
             'filiere_id' => 'required|exists:filieres,id',
             'groupe_id'  => 'nullable|exists:groupes,id',
+            'module_id'  => 'required|integer|exists:modules,id',
         ]);
 
-        $course->update($validated);
+        $course->update([
+            'titre'       => $validated['titre'],
+            'description' => $validated['description'] ?? '',
+            'contenu'     => $validated['contenu'] ?? '',
+            'filiere_id'  => $validated['filiere_id'],
+            'groupe_id'   => $validated['groupe_id'] ?? null,
+            'module_id'   => $validated['module_id'],
+        ]);
 
         return response()->json([
             'success' => true,
-            'data'    => $course->load(['filiere', 'groupe', 'fichiers']),
+            'data'    => $course->load(['module:id,nom,code,filiere_id', 'filiere', 'groupe', 'fichiers']),
             'message' => 'Cours mis à jour avec succès.'
         ]);
     }

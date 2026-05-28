@@ -122,6 +122,7 @@ const MesCours = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedCours, setSelectedCours] = useState(null);
+    const [selectedModuleGroup, setSelectedModuleGroup] = useState(null);
     const [newComment, setNewComment] = useState('');
     const [sendingComment, setSendingComment] = useState(false);
 
@@ -201,9 +202,9 @@ const MesCours = () => {
     if (selectedCours) return (
         <div className="fixed inset-0 bg-[#0f172a]/90 backdrop-blur-sm z-[1000] flex items-center justify-center p-4 font-sans">
             <div className="bg-[#0f172a] border border-cyan-500/30 rounded-2xl p-6 lg:p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-[0_0_40px_rgba(34,211,238,0.15)] flex flex-col relative custom-scrollbar">
-                
+
                 {/* Close Button Top Right */}
-                <button 
+                <button
                     onClick={() => setSelectedCours(null)}
                     className="absolute top-6 right-6 text-[#94a3b8] hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition-colors"
                 >
@@ -211,13 +212,13 @@ const MesCours = () => {
                 </button>
 
                 <div className="mb-6 pr-12">
-                    <button 
+                    <button
                         onClick={() => setSelectedCours(null)}
                         className="text-[#94a3b8] hover:text-cyan-400 flex items-center gap-2 text-sm font-medium mb-4 transition-colors"
                     >
                         <ArrowRight size={16} className="rotate-180" /> Retour aux cours
                     </button>
-                    
+
                     <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 mb-2">
                         {selectedCours.titre}
                     </h2>
@@ -241,7 +242,7 @@ const MesCours = () => {
                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                     <FileText size={20} className="text-cyan-400" /> Fichiers du cours
                 </h3>
-                
+
                 {selectedCours.fichiers && selectedCours.fichiers.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                         {selectedCours.fichiers.map((f, i) => {
@@ -251,56 +252,57 @@ const MesCours = () => {
                             const downloadUrl = getStudentDownloadUrl(f, selectedCours.id);
                             const downloadName = getStudentDownloadFilename(f);
                             const showPreview = isPdf && viewUrl;
-                            
+
                             return (
-                            <div key={f.id || i} className="group bg-white/5 border border-white/10 hover:border-cyan-500/30 rounded-xl p-4 flex items-center gap-4 transition-all hover:bg-white/10 shadow-sm">
-                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isPdf ? 'bg-red-500/20 text-red-400' : isVideo ? 'bg-purple-500/20 text-purple-400' : 'bg-cyan-500/20 text-cyan-400'}`}>
-                                    {isPdf ? <FileText size={20} /> : isVideo ? <Video size={20} /> : <LinkIcon size={20} />}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-white truncate group-hover:text-cyan-400 transition-colors">
-                                        {f.nom || 'Document'}
-                                    </p>
-                                    <p className="text-xs text-[#94a3b8] uppercase tracking-wider mt-0.5">{f.type || 'Fichier'}</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    {showPreview && (
-                                        <a
-                                            href={viewUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="p-2 text-[#94a3b8] hover:text-cyan-400 hover:bg-cyan-400/10 rounded-lg transition-colors inline-flex"
-                                            title="Ouvrir le PDF dans un nouvel onglet"
-                                        >
-                                            <Eye size={18} />
-                                        </a>
-                                    )}
-                                    {(downloadUrl || (f.id && selectedCours.id)) ? (
-                                        <a
-                                            href={downloadUrl || '#'}
-                                            download={downloadName}
-                                            onClick={(e) => triggerStudentDownload(f, selectedCours.id, e)}
-                                            className="p-2 text-[#94a3b8] hover:text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-colors inline-flex cursor-pointer"
-                                            title={`Télécharger ${downloadName}`}
-                                        >
-                                            <Download size={18} />
-                                        </a>
-                                    ) : (
-                                        !showPreview && viewUrl && (
+                                <div key={f.id || i} className="group bg-white/5 border border-white/10 hover:border-cyan-500/30 rounded-xl p-4 flex items-center gap-4 transition-all hover:bg-white/10 shadow-sm">
+                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isPdf ? 'bg-red-500/20 text-red-400' : isVideo ? 'bg-purple-500/20 text-purple-400' : 'bg-cyan-500/20 text-cyan-400'}`}>
+                                        {isPdf ? <FileText size={20} /> : isVideo ? <Video size={20} /> : <LinkIcon size={20} />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-white truncate group-hover:text-cyan-400 transition-colors">
+                                            {f.nom || 'Document'}
+                                        </p>
+                                        <p className="text-xs text-[#94a3b8] uppercase tracking-wider mt-0.5">{f.type || 'Fichier'}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {showPreview && (
                                             <a
                                                 href={viewUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="p-2 text-[#94a3b8] hover:text-cyan-400 hover:bg-cyan-400/10 rounded-lg transition-colors inline-flex"
-                                                title="Ouvrir le lien"
+                                                title="Ouvrir le PDF dans un nouvel onglet"
                                             >
-                                                <ExternalLink size={18} />
+                                                <Eye size={18} />
                                             </a>
-                                        )
-                                    )}
+                                        )}
+                                        {(downloadUrl || (f.id && selectedCours.id)) ? (
+                                            <a
+                                                href={downloadUrl || '#'}
+                                                download={downloadName}
+                                                onClick={(e) => triggerStudentDownload(f, selectedCours.id, e)}
+                                                className="p-2 text-[#94a3b8] hover:text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-colors inline-flex cursor-pointer"
+                                                title={`Télécharger ${downloadName}`}
+                                            >
+                                                <Download size={18} />
+                                            </a>
+                                        ) : (
+                                            !showPreview && viewUrl && (
+                                                <a
+                                                    href={viewUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="p-2 text-[#94a3b8] hover:text-cyan-400 hover:bg-cyan-400/10 rounded-lg transition-colors inline-flex"
+                                                    title="Ouvrir le lien"
+                                                >
+                                                    <ExternalLink size={18} />
+                                                </a>
+                                            )
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        )})}
+                            )
+                        })}
                     </div>
                 ) : (
                     <div className="bg-white/5 border border-white/10 border-dashed rounded-xl p-8 text-center text-[#94a3b8] text-sm mb-8 flex flex-col items-center justify-center gap-3">
@@ -313,7 +315,7 @@ const MesCours = () => {
                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                     <MessageSquare size={20} className="text-indigo-400" /> Espace Discussion ({selectedCours.commentaires?.length || 0})
                 </h3>
-                
+
                 <div className="flex-1 mb-6 space-y-4 pr-1">
                     {selectedCours.commentaires && selectedCours.commentaires.length > 0 ? (
                         selectedCours.commentaires.map((c, i) => (
@@ -352,11 +354,10 @@ const MesCours = () => {
                         <button
                             onClick={handleAddComment}
                             disabled={sendingComment || !newComment.trim()}
-                            className={`px-6 rounded-xl flex items-center justify-center gap-2 font-bold transition-all shadow-lg ${
-                                sendingComment || !newComment.trim() 
-                                ? 'bg-white/5 text-[#94a3b8] cursor-not-allowed border border-white/5' 
-                                : 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-white hover:opacity-90 hover:scale-[1.02] active:scale-95 shadow-[0_0_15px_rgba(34,211,238,0.2)]'
-                            }`}
+                            className={`px-6 rounded-xl flex items-center justify-center gap-2 font-bold transition-all shadow-lg ${sendingComment || !newComment.trim()
+                                    ? 'bg-white/5 text-[#94a3b8] cursor-not-allowed border border-white/5'
+                                    : 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-white hover:opacity-90 hover:scale-[1.02] active:scale-95 shadow-[0_0_15px_rgba(34,211,238,0.2)]'
+                                }`}
                         >
                             <Send size={16} className={sendingComment ? 'animate-pulse' : ''} />
                             <span className="hidden sm:inline">{sendingComment ? 'Envoi...' : 'Envoyer'}</span>
@@ -385,16 +386,16 @@ const MesCours = () => {
                     <p className="text-sm max-w-md mx-auto">Les cours assignés à votre filière et groupe apparaîtront ici quand ils seront disponibles.</p>
                 </div>
             )}
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {courses.map((course) => (
-                    <div 
-                        key={course.id} 
+                    <div
+                        key={course.id}
                         className="group relative bg-[#1e293b]/50 border border-white/10 rounded-2xl backdrop-blur-md overflow-hidden hover:bg-[#1e293b]/80 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(34,211,238,0.15)] flex flex-col"
                     >
                         {/* Soft Top Glow overlay */}
                         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        
+
                         <div className="p-6 flex-1 flex flex-col relative z-10">
                             <div className="flex justify-between items-start mb-5">
                                 <div className="w-12 h-12 bg-black/20 border border-white/10 rounded-xl flex items-center justify-center text-2xl shadow-inner group-hover:scale-110 transition-transform duration-300">
@@ -408,7 +409,7 @@ const MesCours = () => {
                             <h3 className="text-lg font-bold text-white mb-3 line-clamp-2 group-hover:text-cyan-400 transition-colors">
                                 {course.titre}
                             </h3>
-                            
+
                             <div className="flex items-center gap-2 text-[#94a3b8] text-sm mb-5">
                                 <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center text-white text-[10px] font-bold shadow-sm">
                                     {getInitials(course.formateur)}
@@ -421,8 +422,8 @@ const MesCours = () => {
                             </div>
 
                             <div className="flex gap-4 mt-auto pt-4 border-t border-white/10 text-xs text-[#94a3b8] font-medium">
-                                <span className="flex items-center gap-1.5"><FileText size={14} className="text-cyan-400/70"/> {course.fichiers?.length || 0} fichiers</span>
-                                <span className="flex items-center gap-1.5"><MessageSquare size={14} className="text-indigo-400/70"/> {course.commentaires?.length || 0} commentaires</span>
+                                <span className="flex items-center gap-1.5"><FileText size={14} className="text-cyan-400/70" /> {course.fichiers?.length || 0} fichiers</span>
+                                <span className="flex items-center gap-1.5"><MessageSquare size={14} className="text-indigo-400/70" /> {course.commentaires?.length || 0} commentaires</span>
                             </div>
                         </div>
 

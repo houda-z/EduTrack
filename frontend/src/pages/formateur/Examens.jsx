@@ -33,6 +33,9 @@ const Examens = () => {
   // Create Examen Fields
   const [titre, setTitre] = useState('');
   const [filiereId, setFiliereId] = useState('');
+  const [moduleId, setModuleId] = useState('');
+  const [modules, setModules] = useState([]);
+  const [loadingModules, setLoadingModules] = useState(true);
   const [groupeId, setGroupeId] = useState('');
   const [dateExamen, setDateExamen] = useState('');
   const [dureeHeures, setDureeHeures] = useState('1');
@@ -214,10 +217,15 @@ const Examens = () => {
 
   const fetchMetadata = async () => {
     try {
-      const filRes = await api.get('/filieres');
+      const [filRes, grpRes, modRes] = await Promise.all([
+        api.get('/filieres'),
+        api.get('/groupes'),
+        api.get('/formateur/mes-modules')
+      ]);
+
       setFilieres(filRes.data || []);
-      const grpRes = await api.get('/groupes');
       setGroupes(grpRes.data.data || []);
+      setModules(modRes.data && modRes.data.success ? modRes.data.data : []);
     } catch (err) {
       console.warn("API Metadata load failure, using mocks:", err);
       setFilieres([
@@ -229,6 +237,9 @@ const Examens = () => {
         { id: 2, nom: "DEV-102", filiere_id: 1 },
         { id: 3, nom: "SI-201", filiere_id: 2 }
       ]);
+      setModules([]);
+    } finally {
+      setLoadingModules(false);
     }
   };
 
@@ -328,8 +339,8 @@ const Examens = () => {
   const handleCreateExamenSubmit = async (e) => {
     e.preventDefault();
     const totalMinutes = calculateTotalMinutes();
-    if (!titre || !filiereId || !groupeId || !dateExamen || totalMinutes <= 0) {
-      alert("Veuillez remplir tous les champs requis.");
+    if (!titre || !filiereId || !moduleId || !groupeId || !dateExamen || totalMinutes <= 0) {
+      alert("Veuillez remplir tous les champs requis, y compris le module.");
       return;
     }
 
@@ -375,6 +386,7 @@ const Examens = () => {
       titre,
       introduction: introduction || null,
       filiere_id: parseInt(filiereId),
+      module_id: parseInt(moduleId),
       groupe_id: parseInt(groupeId),
       date_examen: dateExamen,
       duree_minutes: totalMinutes,
@@ -391,6 +403,7 @@ const Examens = () => {
         setTitre('');
         setIntroduction('');
         setFiliereId('');
+        setModuleId('');
         setGroupeId('');
         setDateExamen('');
         setDureeHeures('1');
@@ -865,18 +878,36 @@ const Examens = () => {
                   className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-cyan-500 font-semibold resize-none"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest">Filière</label>
                   <select
                     required
                     value={filiereId}
-                    onChange={(e) => setFiliereId(e.target.value)}
+                    onChange={(e) => {
+                      setFiliereId(e.target.value);
+                      setModuleId('');
+                    }}
                     className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-xs text-white focus:outline-none focus:border-cyan-500 font-semibold"
                   >
                     <option value="">Sélectionner...</option>
                     {filieres.map(f => (
                       <option key={f.id} value={f.id}>{f.nom}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest">Module</label>
+                  <select
+                    required
+                    value={moduleId}
+                    onChange={(e) => setModuleId(e.target.value)}
+                    disabled={!filiereId}
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-xs text-white focus:outline-none focus:border-cyan-500 font-semibold disabled:opacity-50"
+                  >
+                    <option value="">Sélectionner...</option>
+                    {modules.filter(m => parseInt(m.filiere_id) === parseInt(filiereId)).map(m => (
+                      <option key={m.id} value={m.id}>{m.nom} {m.code ? `(${m.code})` : ''}</option>
                     ))}
                   </select>
                 </div>

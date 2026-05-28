@@ -108,4 +108,9 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Groupe::class, 'etudiant_groupe', 'etudiant_id', 'groupe_id');
     }
+
+    public function modules()
+    {
+        return $this->belongsToMany(Module::class, 'module_user', 'user_id', 'module_id');
+    }
 }

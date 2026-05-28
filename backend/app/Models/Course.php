@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Course extends Model
 {
     protected $table = 'cours';
-    protected $fillable = ['titre', 'contenu', 'description', 'fichier_url', 'formateur_id', 'enseignant_id', 'filiere_id', 'groupe_id'];
+    protected $fillable = ['titre', 'contenu', 'description', 'fichier_url', 'formateur_id', 'enseignant_id', 'filiere_id', 'groupe_id', 'module_id'];
 
     public function filiere()
     {
@@ -27,6 +27,11 @@ class Course extends Model
     public function groupe()
     {
         return $this->belongsTo(Groupe::class);
+    }
+
+    public function module()
+    {
+        return $this->belongsTo(Module::class, 'module_id');
     }
 
     public function fichiers()

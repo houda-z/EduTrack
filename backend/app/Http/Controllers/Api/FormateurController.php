@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Examen;
+use App\Models\Module;
 use App\Models\Note;
 use App\Models\User;
 use App\Models\Groupe;
@@ -106,6 +107,17 @@ class FormateurController extends Controller
                 'moyenne_classe' => round($moyenneClasse, 2)
             ],
             'message' => 'Statistiques récupérées avec succès.'
+        ]);
+    }
+
+    public function mesModules()
+    {
+        $modules = auth()->user()->modules()->with('filiere:id,nom')->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $modules,
+            'message' => 'Modules du formateur récupérés avec succès.'
         ]);
     }
 

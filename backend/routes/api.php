@@ -78,6 +78,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/notes/{id}', [App\Http\Controllers\Api\NoteController::class, 'update']);
         Route::patch('/sessions/{id}/debloquer', [App\Http\Controllers\Api\ExamenController::class, 'debloquerSession']);
 
+        Route::get('/formateur/mes-modules', [App\Http\Controllers\Api\FormateurController::class, 'mesModules']);
+
         // Emploi du temps Write Operations
         Route::post('/emploi-du-temps', [App\Http\Controllers\Api\EmploiDuTempsController::class, 'store']);
         Route::put('/emploi-du-temps/{id}', [App\Http\Controllers\Api\EmploiDuTempsController::class, 'update']);

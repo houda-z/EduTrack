@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Examen extends Model
 {
     protected $table = 'examens';
-    protected $fillable = ['titre', 'introduction', 'type', 'statut', 'formateur_id', 'enseignant_id', 'filiere_id', 'groupe_id', 'duree', 'date_debut', 'date_fin', 'duree_minutes', 'date_examen'];
+    protected $fillable = ['titre', 'introduction', 'type', 'statut', 'formateur_id', 'enseignant_id', 'filiere_id', 'groupe_id', 'module_id', 'duree', 'date_debut', 'date_fin', 'duree_minutes', 'date_examen'];
 
     public function groupe()
     {
@@ -27,6 +27,11 @@ class Examen extends Model
     public function filiere()
     {
         return $this->belongsTo(Filiere::class);
+    }
+
+    public function module()
+    {
+        return $this->belongsTo(Module::class, 'module_id');
     }
 
     public function questions()

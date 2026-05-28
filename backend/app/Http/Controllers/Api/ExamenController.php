@@ -36,7 +36,7 @@ class ExamenController extends Controller
                 $groupeId = $groupe ? $groupe->id : null;
             }
 
-            $query = Examen::with(['formateur:id,name,prenom', 'filiere:id,nom', 'groupe:id,nom', 'questions.choix']);
+            $query = Examen::with(['module:id,nom,code,filiere_id', 'formateur:id,name,prenom', 'filiere:id,nom', 'groupe:id,nom', 'questions.choix']);
 
             if ($filiereId) {
                 $query->where('filiere_id', $filiereId);
@@ -54,11 +54,11 @@ class ExamenController extends Controller
         } elseif ($user->role === 'enseignant') {
             $exams = Examen::where('enseignant_id', $user->id)
                 ->orWhere('formateur_id', $user->id)
-                ->with(['filiere:id,nom', 'groupe:id,nom', 'questions.choix'])
+                ->with(['module:id,nom,code,filiere_id', 'formateur:id,name,prenom', 'filiere:id,nom', 'groupe:id,nom', 'questions.choix'])
                 ->orderByDesc('created_at')
                 ->get();
         } else {
-            $exams = Examen::with(['filiere:id,nom', 'groupe:id,nom', 'questions.choix'])
+            $exams = Examen::with(['module:id,nom,code,filiere_id', 'formateur:id,name,prenom', 'filiere:id,nom', 'groupe:id,nom', 'questions.choix'])
                 ->orderByDesc('created_at')
                 ->get();
         }
@@ -82,6 +82,7 @@ class ExamenController extends Controller
             'introduction' => 'nullable|string',
             'filiere_id' => 'required|exists:filieres,id',
             'groupe_id' => 'required|exists:groupes,id',
+            'module_id' => 'required|integer|exists:modules,id',
             'date_examen' => 'required|date',
             'duree_minutes' => 'required|integer|min:1',
             'type' => 'required|string', // qcm, code, mixte
@@ -120,6 +121,7 @@ class ExamenController extends Controller
                 'introduction' => $request->introduction ?? null,
                 'filiere_id' => $validated['filiere_id'],
                 'groupe_id' => $validated['groupe_id'],
+                'module_id' => $validated['module_id'],
                 'date_examen' => $validated['date_examen'],
                 'duree_minutes' => $validated['duree_minutes'],
                 'type' => $validated['type'],
@@ -216,7 +218,7 @@ class ExamenController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $exam->load(['questions.choix', 'parties.images', 'parties.tableau', 'parties.questions.choix']),
+                'data' => $exam->load(['module:id,nom,code,filiere_id', 'questions.choix', 'parties.images', 'parties.tableau', 'parties.questions.choix']),
                 'message' => 'Examen créé avec succès.'
             ]);
         } catch (\Exception $e) {
@@ -241,17 +243,27 @@ class ExamenController extends Controller
             'titre' => 'required|string|max:255',
             'filiere_id' => 'required|exists:filieres,id',
             'groupe_id' => 'required|exists:groupes,id',
+            'module_id' => 'required|integer|exists:modules,id',
             'date_examen' => 'required|date',
             'duree_minutes' => 'required|integer|min:1',
             'type' => 'required|string',
             'statut' => 'required|string',
         ]);
 
-        $exam->update($validated);
+        $exam->update([
+            'titre' => $validated['titre'],
+            'filiere_id' => $validated['filiere_id'],
+            'groupe_id' => $validated['groupe_id'],
+            'module_id' => $validated['module_id'],
+            'date_examen' => $validated['date_examen'],
+            'duree_minutes' => $validated['duree_minutes'],
+            'type' => $validated['type'],
+            'statut' => $validated['statut'],
+        ]);
 
         return response()->json([
             'success' => true,
-            'data' => $exam,
+            'data' => $exam->load(['module:id,nom,code,filiere_id', 'questions.choix', 'parties.images', 'parties.tableau', 'parties.questions.choix']),
             'message' => 'Examen mis à jour avec succès.'
         ]);
     }
