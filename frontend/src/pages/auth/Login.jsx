@@ -30,12 +30,12 @@ const Login = () => {
       localStorage.setItem('user', JSON.stringify(user));
 
       if (user.role === 'admin') {
-        navigate('/admin/dashboard');
+        navigate('/admin-dashboard');
       } else if (user.role === 'enseignant') {
         navigate('/enseignant/dashboard');
       } else {
         const nom = (user.name).toLowerCase().replace(/\s+/g, '');
-        navigate(`/etudiant/${nom}/cours`);
+        navigate(`/etudiant/${nom}`);
       }
 
     } catch (err) {

@@ -11,6 +11,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user',    [AuthController::class, 'me']);
 
+    // Filières CRUD Routes
+    Route::post('/filieres', [FiliereController::class, 'store'])->middleware('role:admin');
+    Route::delete('/filieres/{id}', [FiliereController::class, 'destroy'])->middleware('role:admin');
+
+    // Groupes CRUD Routes
+    Route::get('/groupes', [App\Http\Controllers\Api\GroupeController::class, 'index']);
+    Route::post('/groupes', [App\Http\Controllers\Api\GroupeController::class, 'store'])->middleware('role:admin');
+    Route::delete('/groupes/{id}', [App\Http\Controllers\Api\GroupeController::class, 'destroy'])->middleware('role:admin');
+
     // Student Dashboard Routes
     Route::prefix('student')->group(function () {
         Route::get('/stats', [App\Http\Controllers\Api\StudentController::class, 'getDashboardStats']);
@@ -20,5 +29,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/profile', [App\Http\Controllers\Api\StudentController::class, 'getProfile']);
         Route::post('/profile/update', [App\Http\Controllers\Api\StudentController::class, 'updateProfile']);
         Route::post('/exams/submit', [App\Http\Controllers\Api\StudentController::class, 'submitExam']);
+    });
+
+    // Admin Dashboard Routes
+    Route::prefix('admin')->middleware('role:admin')->group(function () {
+        Route::get('/stats', [App\Http\Controllers\Api\AdminController::class, 'getStats']);
+        Route::get('/users', [App\Http\Controllers\Api\AdminController::class, 'getUsers']);
+        Route::put('/users/{id}/role', [App\Http\Controllers\Api\AdminController::class, 'updateUserRole']);
+        Route::delete('/users/{id}', [App\Http\Controllers\Api\AdminController::class, 'destroyUser']);
     });
 });

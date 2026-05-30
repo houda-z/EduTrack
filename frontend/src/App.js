@@ -19,6 +19,7 @@ import Dashboard from './pages/dashboard/Dashboard';
 import FiliereManagement from './pages/dashboard/FiliereManagement';
 import UserManagement from './pages/dashboard/UserManagement';
 import Settings from './pages/dashboard/Settings';
+import AdminDashboard from './components/AdminDashboard';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
 
           {/* Espace Étudiant — Avec Layout Sci-Fi */}
           <Route path="/etudiant/:nom/en-ligne" element={<ExamenEnLigne />} />
