@@ -63,18 +63,34 @@ class AuthController extends Controller
         ]);
 
         if (!Auth::attempt($request->only('email', 'password'))) {
-            return response()->json(['error' => 'Email wla password khata'], 401);
+            return response()->json(['error' => 'Email ou mot de passe incorrect.'], 401);
         }
 
         $user  = Auth::user();
         $token = $user->createToken('auth_token')->plainTextToken;
 
+
+        // Load filiere w groupe mn FK
+        $filiereObj = $user->filiere_id ? \App\Models\Filiere::find($user->filiere_id) : null;
+        $groupeObj  = $user->groupe_id  ? \App\Models\Groupe::find($user->groupe_id)   : null;
+
         return response()->json([
             'token' => $token,
             'user'  => [
-                'name'  => $user->name,
-                'email' => $user->email,
-                'role'  => $user->role
+                'id'         => $user->id,
+                'name'       => $user->name,
+                'prenom'     => $user->prenom,
+                'email'      => $user->email,
+                'role'       => $user->role,
+                'filiere_id' => $user->filiere_id,
+                'groupe_id'  => $user->groupe_id,
+                'filiere'    => $filiereObj ? ['id' => $filiereObj->id, 'nom' => $filiereObj->nom] : null,
+                'groupe'     => $groupeObj  ? ['id' => $groupeObj->id,  'nom' => $groupeObj->nom]  : null,
+                'photo'      => $user->photo,
+                'bio'        => $user->bio,
+                'telephone'  => $user->telephone,
+                'annee'      => $user->annee,
+                'moyenne'    => $user->moyenne,
             ]
         ]);
     }
@@ -89,6 +105,24 @@ class AuthController extends Controller
     // API Me
     public function me(Request $request)
     {
-        return response()->json($request->user());
+        $user = $request->user();
+        $user->load(['filiere', 'groupe']);
+
+        return response()->json([
+            'id'         => $user->id,
+            'name'       => $user->name,
+            'prenom'     => $user->prenom,
+            'email'      => $user->email,
+            'role'       => $user->role,
+            'filiere_id' => $user->filiere_id,
+            'groupe_id'  => $user->groupe_id,
+            'filiere'    => $user->filiere ? ['id' => $user->filiere->id, 'nom' => $user->filiere->nom] : null,
+            'groupe'     => $user->groupe  ? ['id' => $user->groupe->id,  'nom' => $user->groupe->nom]  : null,
+            'photo'      => $user->photo,
+            'bio'        => $user->bio,
+            'telephone'  => $user->telephone,
+            'annee'      => $user->annee,
+            'moyenne'    => $user->moyenne,
+        ]);
     }
 }

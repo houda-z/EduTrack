@@ -8,9 +8,23 @@ use Illuminate\Http\Request;
 
 class GroupeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Groupe::with('filiere')->get());
+        $filiereId = $request->query('filiere_id');
+
+        $query = Groupe::with('filiere');
+
+        if ($filiereId) {
+            $query->where('filiere_id', $filiereId);
+        }
+
+        $groupes = $query->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $groupes,
+            'message' => 'Groupes récupérés avec succès.'
+        ]);
     }
 
     public function store(Request $request)

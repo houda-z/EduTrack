@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 import Home from './pages/Home';
 import Login from './pages/auth/Login';
@@ -21,6 +21,15 @@ import UserManagement from './pages/dashboard/UserManagement';
 import Settings from './pages/dashboard/Settings';
 import AdminDashboard from './components/AdminDashboard';
 
+import FormateurLayout from './components/layout/FormateurLayout';
+import FormateurDashboard from './pages/formateur/Dashboard';
+import FormateurCours from './pages/formateur/MesCours';
+import FormateurCreerCours from './pages/formateur/CreerCours';
+import FormateurExamens from './pages/formateur/Examens';
+import FormateurEtudiants from './pages/formateur/MesEtudiants';
+import FormateurEmploi from './pages/formateur/EmploiDuTemps';
+import CorrectionExamens from './pages/formateur/CorrectionExamens';
+
 function App() {
   return (
     <Router>
@@ -33,9 +42,9 @@ function App() {
 
           {/* Espace Étudiant — Avec Layout Sci-Fi */}
           <Route path="/etudiant/:nom/en-ligne" element={<ExamenEnLigne />} />
-          
+
           <Route path="/etudiant/:nom" element={<EtudiantLayout />}>
-            <Route index element={<DashboardEtudiant />} />
+            <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<DashboardEtudiant />} />
             <Route path="cours" element={<MesCours />} />
             <Route path="emploi" element={<EmploiDuTemps />} />
@@ -43,6 +52,18 @@ function App() {
             <Route path="notes" element={<MesNotes />} />
             <Route path="profil" element={<ProfilEtudiant />} />
             <Route path="parametres" element={<ParametresEtudiant />} />
+          </Route>
+
+          {/* Espace Formateur */}
+          <Route path="/formateur" element={<FormateurLayout />}>
+            <Route index element={<FormateurDashboard />} />
+            <Route path="dashboard" element={<FormateurDashboard />} />
+            <Route path="cours" element={<FormateurCours />} />
+            <Route path="cours/creer" element={<FormateurCreerCours />} />
+            <Route path="examens" element={<FormateurExamens />} />
+            <Route path="correction" element={<CorrectionExamens />} />
+            <Route path="etudiants" element={<FormateurEtudiants />} />
+            <Route path="emploi-du-temps" element={<FormateurEmploi />} />
           </Route>
 
           {/* Admin */}

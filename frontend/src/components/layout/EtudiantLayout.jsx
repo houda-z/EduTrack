@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
-import { 
-    BookOpen, 
-    Calendar, 
-    ClipboardList, 
-    Award, 
-    User, 
-    Settings, 
-    LogOut, 
-    Search, 
+import {
+    BookOpen,
+    Calendar,
+    ClipboardList,
+    Award,
+    User,
+    Settings,
+    LogOut,
+    Search,
     Bell,
     Menu,
     X,
     LayoutDashboard
 } from 'lucide-react';
-import { Link, useLocation, useParams, Outlet } from 'react-router-dom';
+import { Link, useLocation, useParams, Outlet, useNavigate } from 'react-router-dom';
 import './EtudiantLayout.css';
+import api from '../../services/api';
 
 const EtudiantLayout = () => {
     const { nom } = useParams();
@@ -22,7 +23,7 @@ const EtudiantLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     const navItems = [
-        { path: `/etudiant/${nom}`, icon: <LayoutDashboard size={20} />, label: "Dashboard" },
+        { path: `/etudiant/${nom}/dashboard`, icon: <LayoutDashboard size={20} />, label: "Dashboard", end: true },
         { path: `/etudiant/${nom}/cours`, icon: <BookOpen size={20} />, label: "Mes Cours" },
         { path: `/etudiant/${nom}/emploi`, icon: <Calendar size={20} />, label: "Emploi du Temps" },
         { path: `/etudiant/${nom}/examens`, icon: <ClipboardList size={20} />, label: "Examens" },
@@ -32,11 +33,28 @@ const EtudiantLayout = () => {
     ];
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            await api.delete('/logout');
+        } catch (err) {
+            console.warn('Logout API failed:', err);
+        } finally {
+            localStorage.removeItem('user_token');
+            localStorage.removeItem('user');
+            navigate('/login');
+        }
+    };
 
     // Dynamic Title based on Path
     const getPageTitle = () => {
-        const currentItem = navItems.find(item => location.pathname.includes(item.path.split('/').pop()));
-        return currentItem ? currentItem.label : "Tableau de Bord";
+        const path = location.pathname;
+        if (path === `/etudiant/${nom}` || path === `/etudiant/${nom}/dashboard`) {
+            return 'Dashboard';
+        }
+        const currentItem = navItems.find((item) => path === item.path);
+        return currentItem ? currentItem.label : 'Tableau de Bord';
     };
 
     return (
@@ -56,11 +74,13 @@ const EtudiantLayout = () => {
 
                 <nav className="sidebar-nav">
                     {navItems.map((item) => {
-                        const isActive = location.pathname === item.path;
+                        const isActive = item.end
+                            ? location.pathname === item.path || location.pathname === `/etudiant/${nom}`
+                            : location.pathname === item.path;
                         return (
-                            <Link 
-                                key={item.path} 
-                                to={item.path} 
+                            <Link
+                                key={item.path}
+                                to={item.path}
                                 className={`nav-item ${isActive ? 'active' : ''}`}
                             >
                                 <span className="nav-icon">{item.icon}</span>
@@ -73,7 +93,7 @@ const EtudiantLayout = () => {
 
                 <div className="sidebar-footer">
                     <div className="version-tag">VER. 2.0.4-STU</div>
-                    <button className="logout-btn">
+                    <button className="logout-btn" onClick={handleLogout}>
                         <LogOut size={20} />
                         <span>Déconnexion</span>
                     </button>
@@ -100,7 +120,7 @@ const EtudiantLayout = () => {
                             <Bell size={20} />
                             <span className="scifi-dot"></span>
                         </button>
-                        
+
                         <div className="stu-profile-pill">
                             <div className="stu-info">
                                 <span className="stu-name">{nom || "Utilisateur"}</span>

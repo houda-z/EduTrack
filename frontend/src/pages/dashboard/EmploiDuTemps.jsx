@@ -1,71 +1,93 @@
-import React from 'react';
-import { Clock, MapPin } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
+import ScheduleTimeline from '../../components/schedule/ScheduleTimeline';
+import { SCHEDULE_START, SCHEDULE_END } from '../../constants/scheduleConfig';
 import './EmploiDuTemps.css';
 
 const EmploiDuTemps = () => {
-    const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
-    const timeSlots = ["08:30 - 10:30", "10:45 - 12:45", "14:00 - 16:00", "16:15 - 18:15"];
+    const [schedule, setSchedule] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [hasGroupe, setHasGroupe] = useState(true);
 
-    const schedule = [
-        { day: "Lundi", time: "08:30 - 10:30", subject: "React Native", room: "Lab 4", teacher: "M. Ahmed", color: "cyan" },
-        { day: "Lundi", time: "10:45 - 12:45", subject: "UI Architecture", room: "Salle 2", teacher: "Mme. Sarah", color: "purple" },
-        { day: "Mardi", time: "14:00 - 16:00", subject: "Laravel Backend", room: "Lab 1", teacher: "M. Karim", color: "cyan" },
-        { day: "Mercredi", time: "08:30 - 10:30", subject: "Cloud Computing", room: "Salle 5", teacher: "Dr. Ben", color: "purple" },
-        { day: "Jeudi", time: "10:45 - 12:45", subject: "Soft Skills", room: "Amphi A", teacher: "Mme. Layla", color: "blue" },
-        { day: "Vendredi", time: "16:15 - 18:15", subject: "Mobile Dev", room: "Lab 3", teacher: "M. Sami", color: "cyan" },
-    ];
+    useEffect(() => {
+        fetchSchedule();
+    }, []);
 
-    const getSession = (day, slot) => {
-        return schedule.find(s => s.day === day && s.time === slot);
+    const fetchSchedule = async () => {
+        setLoading(true);
+        setError(null);
+
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user || !user.groupe_id) {
+                setHasGroupe(false);
+                setSchedule([]);
+                setLoading(false);
+                return;
+            }
+
+            const response = await api.get('/emploi-du-temps', {
+                params: { groupe_id: user.groupe_id },
+            });
+
+            if (response.data?.success && response.data.data) {
+                const normalized = response.data.data.map((item) => ({
+                    ...item,
+                    jour: item.jour?.toLowerCase() || 'lundi',
+                }));
+                setSchedule(normalized);
+                setHasGroupe(true);
+            } else {
+                setSchedule([]);
+                setHasGroupe(true);
+            }
+        } catch (err) {
+            console.error('Error fetching schedule:', err);
+            setError("Erreur lors du chargement de l'emploi du temps");
+            setSchedule([]);
+        } finally {
+            setLoading(false);
+        }
     };
+
+    if (loading) {
+        return (
+            <div className="schedule-loading">
+                <div className="schedule-spinner" />
+                Chargement de l'emploi du temps...
+            </div>
+        );
+    }
+
+    if (!hasGroupe) {
+        return (
+            <div className="schedule-no-groupe">
+                <p className="schedule-no-groupe-title">Groupe non assigné</p>
+                <p className="schedule-no-groupe-desc">
+                    Votre emploi du temps apparaîtra une fois que vous serez assigné à un groupe.
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div className="schedule-container">
-
-
-            <div className="schedule-grid-wrapper">
-                <div className="schedule-header-row">
-                    <div className="time-column-header">Heure</div>
-                    {days.map(day => (
-                        <div key={day} className="day-column-header">{day}</div>
-                    ))}
-                </div>
-
-                <div className="schedule-body">
-                    {timeSlots.map(slot => (
-                        <div key={slot} className="schedule-row">
-                            <div className="time-slot-label">
-                                <Clock size={14} />
-                                <span>{slot}</span>
-                            </div>
-                            {days.map(day => {
-                                const session = getSession(day, slot);
-                                return (
-                                    <div key={`${day}-${slot}`} className="schedule-cell">
-                                        {session ? (
-                                            <div className={`session-card ${session.color}`}>
-                                                <div className="session-glow"></div>
-                                                <h4>{session.subject}</h4>
-                                                <div className="session-meta">
-                                                    <span className="room"><MapPin size={12} /> {session.room}</span>
-                                                    <span className="teacher">{session.teacher}</span>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="empty-slot"></div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    ))}
-                </div>
+            <div className="schedule-page-header">
+                <h2>Mon emploi du temps</h2>
+                <p>
+                    Semaine type — plage continue de {SCHEDULE_START} à {SCHEDULE_END}
+                </p>
             </div>
 
+            {error && <div className="schedule-error">{error}</div>}
+
+            <ScheduleTimeline sessions={schedule} readonly />
+
             <div className="schedule-legend">
-                <div className="legend-item"><span className="dot cyan"></span> Technique</div>
-                <div className="legend-item"><span className="dot purple"></span> Design / Architecture</div>
-                <div className="legend-item"><span className="dot blue"></span> Soft Skills</div>
+                <div className="legend-item"><span className="dot cyan" /> Cours</div>
+                <div className="legend-item"><span className="dot purple" /> Examen</div>
+                <div className="legend-item"><span className="dot blue" /> TP</div>
             </div>
         </div>
     );

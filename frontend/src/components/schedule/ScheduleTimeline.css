@@ -1,0 +1,196 @@
+.schedule-timeline {
+  width: 100%;
+}
+
+.schedule-timeline-range {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(34, 211, 238, 0.08);
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.schedule-timeline-grid {
+  display: grid;
+  grid-template-columns: 72px repeat(6, minmax(140px, 1fr));
+  gap: 0;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-x: auto;
+}
+
+.schedule-timeline-time-col {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(30, 41, 59, 0.4);
+}
+
+.schedule-timeline-corner {
+  height: 48px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.schedule-timeline-time-label {
+  flex: 1;
+  min-height: 56px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.schedule-timeline-day-col {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  min-width: 140px;
+}
+
+.schedule-timeline-day-col:last-child {
+  border-right: none;
+}
+
+.schedule-timeline-day-header {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #22d3ee;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(30, 41, 59, 0.3);
+}
+
+/* 10h = 600min → 6 lignes horaires × ~56px ≈ 336px corps */
+.schedule-timeline-day-body {
+  position: relative;
+  flex: 1;
+  min-height: 336px;
+  height: 336px;
+}
+
+.schedule-timeline-hour-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.schedule-timeline-hour-line:nth-child(1) { top: 0%; }
+.schedule-timeline-hour-line:nth-child(2) { top: 11.11%; }
+.schedule-timeline-hour-line:nth-child(3) { top: 22.22%; }
+.schedule-timeline-hour-line:nth-child(4) { top: 33.33%; }
+.schedule-timeline-hour-line:nth-child(5) { top: 44.44%; }
+.schedule-timeline-hour-line:nth-child(6) { top: 55.56%; }
+.schedule-timeline-hour-line:nth-child(7) { top: 66.67%; }
+.schedule-timeline-hour-line:nth-child(8) { top: 77.78%; }
+.schedule-timeline-hour-line:nth-child(9) { top: 88.89%; }
+.schedule-timeline-hour-line:nth-child(10) { top: 100%; }
+.schedule-timeline-hour-line:nth-child(11) { display: none; }
+
+.schedule-timeline-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: #475569;
+  font-style: italic;
+  pointer-events: none;
+}
+
+.schedule-timeline-session {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  border-radius: 10px;
+  padding: 6px 8px;
+  overflow: hidden;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  border: 1px solid transparent;
+}
+
+.schedule-timeline-session.interactive {
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.schedule-timeline-session.interactive:hover {
+  transform: scale(1.02);
+  z-index: 5;
+}
+
+.schedule-timeline-session.cyan {
+  background: rgba(34, 211, 238, 0.15);
+  border-color: rgba(34, 211, 238, 0.35);
+  color: #a5f3fc;
+}
+
+.schedule-timeline-session.purple {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.35);
+  color: #c4b5fd;
+}
+
+.schedule-timeline-session.blue {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: #93c5fd;
+}
+
+.schedule-timeline-session-time {
+  font-size: 0.62rem;
+  font-weight: 800;
+  opacity: 0.9;
+}
+
+.schedule-timeline-session-title {
+  font-size: 0.72rem;
+  color: #fff;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.schedule-timeline-session-room {
+  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  opacity: 0.8;
+}
+
+.schedule-timeline-session-type {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  font-weight: 800;
+  opacity: 0.7;
+}
+
+@media (max-width: 900px) {
+  .schedule-timeline-grid {
+    grid-template-columns: 60px repeat(6, minmax(120px, 1fr));
+  }
+}

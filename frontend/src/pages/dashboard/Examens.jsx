@@ -1,69 +1,84 @@
-import React from 'react';
-import { 
-    Calendar, 
-    Clock, 
-    HelpCircle, 
-    Award, 
-    ArrowRight, 
-    AlertTriangle 
+import React, { useState, useEffect } from 'react';
+import {
+    Calendar,
+    Clock,
+    HelpCircle,
+    Award,
+    ArrowRight,
+    AlertTriangle
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
+import api from '../../services/api';
 import './Examens.css';
 
 const Examens = () => {
     const { nom } = useParams();
     const navigate = useNavigate();
+    const [exams, setExams] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // Mock Data détaillée des examens
-    const mockExams = [
-        {
-            id: 1,
-            title: "Contrôle : React JS & Hooks",
-            course: "Développement Frontend Avancé",
-            duration: "120 min",
-            questions: 15,
-            coef: 3,
-            date: "Disponible dès maintenant",
-            status: "available", // Green/Cyan
-            difficulty: "Moyen"
-        },
-        {
-            id: 2,
-            title: "Examen Final : Laravel Framework",
-            course: "Architecture Backend PHP",
-            duration: "180 min",
-            questions: 24,
-            coef: 6,
-            date: "Demain à 09:00",
-            status: "urgent", // Red/Violet
-            difficulty: "Difficile"
-        },
-        {
-            id: 3,
-            title: "Quiz : SQL & Optimisation",
-            course: "Gestion de Bases de Données",
-            duration: "45 min",
-            questions: 20,
-            coef: 1,
-            date: "Passé le 15 Mai",
-            status: "closed", // Gray
-            difficulty: "Facile",
-            grade: "18/20"
-        }
-    ];
+    useEffect(() => {
+        fetchExamens();
+    }, []);
 
-    const getStatusBadge = (status) => {
-        switch(status) {
-            case 'available': 
-                return <span className="exam-badge badge-cyan">DISPONIBLE</span>;
-            case 'urgent': 
-                return <span className="exam-badge badge-urgent">URGENT</span>;
-            case 'closed': 
-                return <span className="exam-badge badge-closed">CLÔTURÉ</span>;
-            default: 
-                return null;
+    const fetchExamens = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await api.get('/examens');
+            if (response.data && response.data.success && response.data.data) {
+                setExams(response.data.data);
+            } else {
+                setExams([]);
+            }
+        } catch (err) {
+            console.error('Error fetching examens:', err);
+            setError('Erreur lors du chargement des examens');
+            setExams([]);
+        } finally {
+            setLoading(false);
         }
     };
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'Date non disponible';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('fr-FR', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch {
+            return dateString;
+        }
+    };
+
+    const getStatusBadge = (status) => {
+        switch (status) {
+            case 'publie':
+                return <span className="exam-badge badge-cyan">PUBLIÉ</span>;
+            case 'brouillon':
+                return <span className="exam-badge badge-closed">BROUILLON</span>;
+            case 'termine':
+                return <span className="exam-badge badge-urgent">TERMINÉ</span>;
+            default:
+                return <span className="exam-badge badge-closed">{status?.toUpperCase() || 'INCONNU'}</span>;
+        }
+    };
+
+    if (loading) {
+        return (
+            <div style={{ color: 'white', textAlign: 'center', padding: '50px' }}>
+                <div style={{ width: 40, height: 40, border: '4px solid rgba(34,211,238,0.2)', borderTop: '4px solid cyan', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }}></div>
+                Chargement des examens...
+            </div>
+        );
+    }
 
     return (
         <div className="exam-list-view">
@@ -78,61 +93,69 @@ const Examens = () => {
                 </div>
             </header>
 
-            <div className="exam-grid-premium">
-                {mockExams.map((exam) => (
-                    <div key={exam.id} className={`exam-card-sci glass-glow ${exam.status}`}>
-                        {/* Background Effect */}
-                        <div className="card-flare"></div>
+            {error && (
+                <div style={{ padding: '16px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', color: '#fca5a5', marginBottom: '20px' }}>
+                    {error}
+                </div>
+            )}
 
-                        <div className="card-top">
-                            {getStatusBadge(exam.status)}
-                            <div className="exam-difficulty">{exam.difficulty}</div>
-                        </div>
+            {exams.length === 0 ? (
+                <div style={{ color: '#94a3b8', textAlign: 'center', padding: '60px 20px' }}>
+                    <p style={{ fontSize: '18px', fontWeight: 'bold' }}>Aucun examen disponible</p>
+                    <p style={{ fontSize: '13px', marginTop: '8px' }}>Les examens assignés à votre filière et groupe apparaîtront ici.</p>
+                </div>
+            ) : (
+                <div className="exam-grid-premium">
+                    {exams.map((exam) => (
+                        <div key={exam.id} className={`exam-card-sci glass-glow`}>
+                            {/* Background Effect */}
+                            <div className="card-flare"></div>
 
-                        <div className="card-body">
-                            <h3 className="exam-title">{exam.title}</h3>
-                            <p className="course-subtitle">{exam.course}</p>
+                            <div className="card-top">
+                                {getStatusBadge(exam.statut)}
+                            </div>
 
-                            <div className="exam-stats-row">
-                                <div className="stat-item">
-                                    <Clock size={16} />
-                                    <span>{exam.duration}</span>
+                            <div className="card-body">
+                                <h3 className="exam-title">{exam.titre}</h3>
+                                <p className="course-subtitle">{exam.groupe?.nom || 'Groupe'} - {exam.filiere?.nom || 'Filière'}</p>
+
+                                <div className="exam-stats-row">
+                                    <div className="stat-item">
+                                        <Clock size={16} />
+                                        <span>{exam.duree_minutes} min</span>
+                                    </div>
+                                    <div className="stat-item">
+                                        <HelpCircle size={16} />
+                                        <span>{exam.questions?.length || 0} Qs</span>
+                                    </div>
                                 </div>
-                                <div className="stat-item">
-                                    <HelpCircle size={16} />
-                                    <span>{exam.questions} Qs</span>
-                                </div>
-                                <div className="stat-item">
-                                    <Award size={16} />
-                                    <span>Coef {exam.coef}</span>
+
+                                <div className="exam-date-box">
+                                    <Calendar size={14} />
+                                    <span>{formatDate(exam.date_examen)}</span>
                                 </div>
                             </div>
 
-                            <div className="exam-date-box">
-                                <Calendar size={14} />
-                                <span>{exam.date}</span>
+                            <div className="card-footer">
+                                {exam.statut === 'publie' ? (
+                                    <button
+                                        className="btn-exam-action btn-cyan"
+                                        onClick={() => navigate(`/etudiant/${nom}/en-ligne`, { state: { examId: exam.id, examTitre: exam.titre, examDuree: exam.duree_minutes } })}
+                                    >
+                                        COMMENCER L'EXAMEN
+                                        <ArrowRight size={18} />
+                                    </button>
+                                ) : (
+                                    <div style={{ color: '#94a3b8', fontSize: '13px', textAlign: 'center', padding: '8px' }}>
+                                        {exam.statut === 'brouillon' && 'Examen en préparation'}
+                                        {exam.statut === 'termine' && 'Examen terminé'}
+                                    </div>
+                                )}
                             </div>
                         </div>
-
-                        <div className="card-footer">
-                            {exam.status === 'closed' ? (
-                                <div className="grade-display">
-                                    <span className="label">NOTE OBTENUE</span>
-                                    <span className="value">{exam.grade}</span>
-                                </div>
-                            ) : (
-                                <button 
-                                    className={`btn-exam-action ${exam.status === 'urgent' ? 'btn-violet' : 'btn-cyan'}`}
-                                    onClick={() => navigate(`/etudiant/${nom}/en-ligne`)}
-                                >
-                                    {exam.status === 'urgent' ? 'LANCER MAINTENANT' : "COMMENCER L'ÉPREUVE"}
-                                    <ArrowRight size={18} />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
 
             {/* Warning Section */}
             <div className="proctoring-notice glass-glow">
@@ -148,7 +171,7 @@ const Examens = () => {
 
 // Simple ShieldAlert fallback if not available
 const ShieldAlert = (props) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" /><path d="M12 8v4" /><path d="M12 16h.01" /></svg>
 );
 
 export default Examens;
