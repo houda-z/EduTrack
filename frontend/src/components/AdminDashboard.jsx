@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Users, 
-  GraduationCap, 
-  BookOpen, 
-  LayoutDashboard, 
-  Settings, 
-  LogOut, 
+import {
+  Users,
+  GraduationCap,
+  BookOpen,
+  LayoutDashboard,
+  Settings,
+  LogOut,
   ArrowRight,
   ShieldCheck,
   Activity,
@@ -46,6 +46,16 @@ const AdminDashboard = () => {
   const [newGroupe, setNewGroupe] = useState({ nom: '', filiere_id: '' });
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
+
+  const [importResult, setImportResult] = useState(null);
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  const [newUser, setNewUser] = useState({
+    prenom: '', name: '', email: '', password: '',
+    role: 'etudiant', filiere_id: '', groupe_id: '',
+    telephone: '', annee: ''
+  });
+  const [importedCredentials, setImportedCredentials] = useState([]);
+  const [importRole, setImportRole] = useState('etudiant');
 
   // Paramètres states
   const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -132,10 +142,12 @@ const AdminDashboard = () => {
     try {
       setFiliereLoading(true);
       const response = await axios.get('http://localhost:8000/api/filieres', getAuthConfig());
-      setFilieres(response.data);
+      const data = response.data?.data || response.data;
+      setFilieres(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Erreur fetch filieres:', err);
       setError('Erreur lors du chargement des filières.');
+      setFilieres([]);
     } finally {
       setFiliereLoading(false);
     }
@@ -180,10 +192,13 @@ const AdminDashboard = () => {
     try {
       setGroupeLoading(true);
       const response = await axios.get('http://localhost:8000/api/groupes', getAuthConfig());
-      setGroupes(response.data);
+      // Handle both formats
+      const data = response.data?.data || response.data;
+      setGroupes(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Erreur fetch groupes:', err);
       setError('Erreur lors du chargement des groupes.');
+      setGroupes([]);
     } finally {
       setGroupeLoading(false);
     }
@@ -227,15 +242,20 @@ const AdminDashboard = () => {
     try {
       setUserLoading(true);
       const response = await axios.get('http://localhost:8000/api/admin/users', getAuthConfig());
-      setUsers(response.data);
+
+      // Hna ghadi n-sécurisew l-format: ila kant l-data wist response.data.data aw response.data direct
+      const data = response.data?.data || response.data;
+
+      // Ghadi n-7etto l-data ghi ila kant Array, sinon n-7etto Array khawi []
+      setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Erreur fetch users:', err);
       setError('Erreur lors du chargement des utilisateurs.');
+      setUsers([]); // Hna ila wqe3 error n-7etto array khawi bach l-app mat-bloquach
     } finally {
       setUserLoading(false);
     }
   };
-
   const handleUpdateRole = async (id, newRole) => {
     try {
       await axios.put(`http://localhost:8000/api/admin/users/${id}/role`, { role: newRole }, getAuthConfig());
@@ -260,6 +280,79 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleImportFilieres = async (file) => {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await axios.post('http://localhost:8000/api/admin/filieres/import', formData, {
+        headers: { ...getAuthConfig().headers, 'Content-Type': 'multipart/form-data' }
+      });
+      setImportResult(res.data);
+      fetchFilieres();
+    } catch (err) {
+      setImportResult({ success: false, message: err.response?.data?.message || 'Erreur import.' });
+    }
+  };
+
+  const handleImportGroupes = async (file) => {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await axios.post('http://localhost:8000/api/admin/groupes/import', formData, {
+        headers: { ...getAuthConfig().headers, 'Content-Type': 'multipart/form-data' }
+      });
+      setImportResult(res.data);
+      fetchGroupes();
+    } catch (err) {
+      setImportResult({ success: false, message: err.response?.data?.message || 'Erreur import.' });
+    }
+  };
+
+  const handleCreateUser = async () => {
+    if (!newUser.prenom || !newUser.name || !newUser.email) {
+      alert('Veuillez remplir tous les champs obligatoires.');
+      return;
+    }
+    const payload = {
+      ...newUser,
+      filiere_id: newUser.role === 'etudiant' ? newUser.filiere_id : null,
+      groupe_id: newUser.role === 'etudiant' ? newUser.groupe_id : null,
+    };
+    try {
+      const res = await axios.post('http://localhost:8000/api/admin/users', payload, getAuthConfig());
+      setShowCreateUser(false);
+      setNewUser({ prenom: '', name: '', email: '', password: '', role: 'etudiant', filiere_id: '', groupe_id: '', telephone: '', annee: '' });
+      fetchUsers();
+      setFormSuccess('Utilisateur créé avec succès !');
+      if (res.data.credentials) {
+        setImportedCredentials(prev => [...prev, res.data.credentials]);
+      }
+    } catch (err) {
+      setFormError(err.response?.data?.message || 'Erreur lors de la création.');
+    }
+  };
+
+  const handleImportUsers = async (file) => {
+    if (!file) return;
+    setImportedCredentials([]);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('role', importRole);
+
+    try {
+      const res = await axios.post('http://localhost:8000/api/admin/users/import', formData, {
+        headers: { ...getAuthConfig().headers, 'Content-Type': 'multipart/form-data' }
+      });
+      if (res.data.credentials) setImportedCredentials(res.data.credentials);
+      setImportResult(res.data);
+      fetchUsers();
+    } catch (err) {
+      setImportResult({ success: false, message: err.response?.data?.message || 'Erreur import.' });
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('user_token');
     localStorage.removeItem('user');
@@ -276,7 +369,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#0f172a] bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white font-sans flex relative overflow-hidden">
-      
+
       {/* Decorative background glow elements */}
       <div className="absolute top-[-10%] left-[-10%] w-[45%] h-[45%] bg-indigo-500/20 rounded-full blur-[140px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none"></div>
@@ -315,7 +408,7 @@ const AdminDashboard = () => {
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group border ${activeTab === link.label
                 ? 'bg-gradient-to-r from-cyan-500/20 to-indigo-500/10 text-cyan-300 border-cyan-500/30 shadow-[0_0_10px_rgba(34,211,238,0.1)]'
                 : 'text-slate-300 hover:bg-white/5 hover:text-white border-transparent'
-              }`}
+                }`}
             >
               <span className={activeTab === link.label ? 'text-cyan-400' : 'text-slate-400 group-hover:text-cyan-400 transition-colors'}>
                 {link.icon}
@@ -349,7 +442,7 @@ const AdminDashboard = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 h-screen overflow-y-auto p-6 md:p-10 relative z-10">
-        
+
         {/* Dynamic content rendering based on activeTab */}
         {activeTab === 'Vue générale' && (
           <>
@@ -497,8 +590,8 @@ const AdminDashboard = () => {
                 <form onSubmit={handleCreateFiliere} className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Nom de la Filière</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="e.g. Développement Digital"
                       value={newFiliere.nom}
                       onChange={(e) => setNewFiliere({ ...newFiliere, nom: e.target.value })}
@@ -508,7 +601,7 @@ const AdminDashboard = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Description / Code</label>
-                    <textarea 
+                    <textarea
                       placeholder="Description abrégée ou détails de la formation..."
                       value={newFiliere.description}
                       onChange={(e) => setNewFiliere({ ...newFiliere, description: e.target.value })}
@@ -523,6 +616,30 @@ const AdminDashboard = () => {
                     Créer la filière
                   </button>
                 </form>
+
+                {/* Import Excel Section */}
+                <div className="mt-6 pt-6 border-t border-white/5">
+                  <h4 className="text-sm font-bold text-slate-300 mb-3">📥 Import Excel (en masse)</h4>
+                  <p className="text-xs text-slate-500 mb-3">
+                    Format requis: colonne A = nom, colonne B = description (ligne 1 = en-têtes)
+                  </p>
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={(e) => handleImportFilieres(e.target.files[0])}
+                    className="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-cyan-500/10 file:text-cyan-300 file:font-bold hover:file:bg-cyan-500/20 cursor-pointer"
+                  />
+                  {importResult && (
+                    <div className={`mt-3 p-3 rounded-lg text-xs ${importResult.success ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-red-500/10 text-red-300 border border-red-500/20'}`}>
+                      {importResult.message}
+                      {importResult.errors?.length > 0 && (
+                        <ul className="mt-2 space-y-1">
+                          {importResult.errors.map((e, i) => <li key={i}>⚠️ {e}</li>)}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Table List */}
@@ -599,8 +716,8 @@ const AdminDashboard = () => {
                 <form onSubmit={handleCreateGroupe} className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Nom du Groupe</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="e.g. DEV101"
                       value={newGroupe.nom}
                       onChange={(e) => setNewGroupe({ ...newGroupe, nom: e.target.value })}
@@ -632,6 +749,30 @@ const AdminDashboard = () => {
                     Créer le groupe
                   </button>
                 </form>
+
+                {/* Import Excel Section */}
+                <div className="mt-6 pt-6 border-t border-white/5">
+                  <h4 className="text-sm font-bold text-slate-300 mb-3">📥 Import Excel (en masse)</h4>
+                  <p className="text-xs text-slate-500 mb-3">
+                    Format requis Excel: colonne A = nom groupe, colonne B = nom filière
+                  </p>
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={(e) => handleImportGroupes(e.target.files[0])}
+                    className="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-cyan-500/10 file:text-cyan-300 file:font-bold hover:file:bg-cyan-500/20 cursor-pointer"
+                  />
+                  {importResult && (
+                    <div className={`mt-3 p-3 rounded-lg text-xs ${importResult.success ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' : 'bg-red-500/10 text-red-300 border border-red-500/20'}`}>
+                      {importResult.message}
+                      {importResult.errors?.length > 0 && (
+                        <ul className="mt-2 space-y-1">
+                          {importResult.errors.map((e, i) => <li key={i}>⚠️ {e}</li>)}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Table List */}
@@ -688,10 +829,179 @@ const AdminDashboard = () => {
         {/* --- Tab: Gestion Utilisateurs --- */}
         {activeTab === 'Gestion Utilisateurs' && (
           <div className="space-y-6">
-            <header>
-              <h2 className="text-3xl font-bold text-indigo-300">🎓 Gestion des Utilisateurs</h2>
-              <p className="text-slate-400 text-sm mt-1">Supervisez et modifiez les rôles et permissions des comptes enregistrés.</p>
-            </header>
+            <div className="flex justify-between items-center mb-6">
+              <header>
+                <h2 className="text-3xl font-bold text-indigo-300">🎓 Gestion des Utilisateurs</h2>
+                <p className="text-slate-400 text-sm mt-1">Supervisez et modifiez les rôles et permissions des comptes enregistrés.</p>
+              </header>
+              <button
+                onClick={() => { setShowCreateUser(true); fetchFilieres(); fetchGroupes(); }}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-600 rounded-xl text-sm font-bold"
+              >
+                <Plus size={16} /> Créer un utilisateur
+              </button>
+            </div>
+
+            {/* Create User Form */}
+            {showCreateUser && (
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-white">Créer un utilisateur</h3>
+                  <button onClick={() => setShowCreateUser(false)} className="text-slate-400 hover:text-white">✕</button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs text-slate-400 uppercase font-bold">Prénom *</label>
+                    <input value={newUser.prenom} onChange={e => setNewUser({ ...newUser, prenom: e.target.value })}
+                      className="w-full mt-1 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400 uppercase font-bold">Nom *</label>
+                    <input value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })}
+                      className="w-full mt-1 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400 uppercase font-bold">Email *</label>
+                    <input type="email" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })}
+                      className="w-full mt-1 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400 uppercase font-bold">Rôle *</label>
+                    <select value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}
+                      className="w-full mt-1 px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500">
+                      <option value="etudiant">Étudiant</option>
+                      <option value="enseignant">Enseignant</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                  
+                  {newUser.role === 'etudiant' && (
+                    <>
+                      <div>
+                        <label className="text-xs text-slate-400 uppercase font-bold">Filière</label>
+                        <select value={newUser.filiere_id} onChange={e => setNewUser({ ...newUser, filiere_id: e.target.value, groupe_id: '' })}
+                          className="w-full mt-1 px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500">
+                          <option value="">Choisir une filière...</option>
+                          {filieres.map(f => <option key={f.id} value={f.id}>{f.nom}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs text-slate-400 uppercase font-bold">Groupe</label>
+                        <select value={newUser.groupe_id} onChange={e => setNewUser({ ...newUser, groupe_id: e.target.value })}
+                          className="w-full mt-1 px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500"
+                          disabled={!newUser.filiere_id}>
+                          <option value="">Choisir un groupe...</option>
+                          {groupes.filter(g => g.filiere_id === parseInt(newUser.filiere_id)).map(g => (
+                            <option key={g.id} value={g.id}>{g.nom}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </>
+                  )}
+                  <div>
+                    <label className="text-xs text-slate-400 uppercase font-bold">Téléphone</label>
+                    <input value={newUser.telephone} onChange={e => setNewUser({ ...newUser, telephone: e.target.value })}
+                      className="w-full mt-1 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400 uppercase font-bold">Année</label>
+                    <select value={newUser.annee} onChange={e => setNewUser({ ...newUser, annee: e.target.value })}
+                      className="w-full mt-1 px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500">
+                      <option value="">Non spécifiée</option>
+                      <option value="1ère année">1ère année</option>
+                      <option value="2ème année">2ème année</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 mt-6">
+                  <button onClick={() => setShowCreateUser(false)}
+                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-bold hover:bg-white/10 transition-all">
+                    Annuler
+                  </button>
+                  <button onClick={handleCreateUser}
+                    className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-600 rounded-xl text-sm font-bold transition-all">
+                    Créer l'utilisateur
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Import Users from Excel */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
+              <h3 className="font-bold text-white mb-3">📥 Import utilisateurs Excel (en masse)</h3>
+
+              {/* Role Selector Dropdown */}
+              <div className="mb-4 max-w-xs">
+                <label className="text-xs text-slate-400 uppercase font-bold block mb-1">
+                  1. Choisir le rôle pour cet import:
+                </label>
+                <select 
+                  value={importRole} 
+                  onChange={(e) => setImportRole(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500 cursor-pointer"
+                >
+                  <option value="etudiant">Étudiants</option>
+                  <option value="enseignant">Enseignants</option>
+                </select>
+              </div>
+
+              <label className="text-xs text-slate-400 uppercase font-bold block mb-1">
+                2. Sélectionner le fichier Excel:
+              </label>
+              <p className="text-xs text-slate-500 mb-3">
+                Format requis: Fichier Excel (.xlsx, .xls) uniquement. Colonnes: A=prénom, B=nom, C=email, D=filière, E=groupe, F=téléphone, G=année.
+              </p>
+
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={(e) => handleImportUsers(e.target.files[0])}
+                className="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-500/10 file:text-indigo-300 file:font-bold hover:file:bg-indigo-500/20 cursor-pointer"
+              />
+
+              {/* Show generated credentials after import */}
+              {importedCredentials.length > 0 && (
+                <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                  <p className="text-amber-300 font-bold text-xs mb-3">
+                    ⚠️ Sauvegardez ces identifiants — ils ne seront plus affichés:
+                  </p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="text-slate-400 border-b border-white/10">
+                          <th className="pb-2 text-left">Nom</th>
+                          <th className="pb-2 text-left">Email</th>
+                          <th className="pb-2 text-left">Mot de passe</th>
+                          <th className="pb-2 text-left">Rôle</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importedCredentials.map((cred, i) => (
+                          <tr key={i} className="border-b border-white/5">
+                            <td className="py-2 text-white font-semibold">{cred.nom}</td>
+                            <td className="py-2 font-mono text-cyan-300">{cred.email}</td>
+                            <td className="py-2 font-mono text-amber-300 font-bold">{cred.password}</td>
+                            <td className="py-2 text-slate-300">{cred.role}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const text = importedCredentials.map(c => `${c.nom} | ${c.email} | ${c.password} | ${c.role}`).join('\n');
+                      navigator.clipboard.writeText(text);
+                      alert('Identifiants copiés !');
+                    }}
+                    className="mt-3 px-3 py-1.5 bg-amber-500/20 border border-amber-500/30 rounded-lg text-amber-300 text-xs font-bold hover:bg-amber-500/30 transition-all"
+                  >
+                    📋 Copier tous les identifiants
+                  </button>
+                </div>
+              )}
+            </div>
 
             <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden">
               <h3 className="text-lg font-bold mb-4 text-white">Comptes Utilisateurs</h3>
@@ -714,20 +1024,19 @@ const AdminDashboard = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5 text-sm">
-                      {users.map((user) => (
+                      {Array.isArray(users) && users.map((user) => (
                         <tr key={user.id} className="group hover:bg-white/[0.02] transition-colors">
                           <td className="py-4 pr-4 font-semibold text-white">
                             {user.prenom ? `${user.prenom} ${user.name}` : user.name}
                           </td>
                           <td className="py-4 pr-4 font-mono text-xs text-slate-400">{user.email}</td>
                           <td className="py-4 pr-4">
-                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                              user.role === 'admin' 
-                                ? 'bg-red-500/10 text-red-400 border border-red-500/20' 
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${user.role === 'admin'
+                                ? 'bg-red-500/10 text-red-400 border border-red-500/20'
                                 : user.role === 'enseignant'
-                                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
-                            }`}>
+                                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                  : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                              }`}>
                               {user.role}
                             </span>
                           </td>
@@ -743,13 +1052,13 @@ const AdminDashboard = () => {
                               <option value="etudiant" className="bg-[#0f172a] text-cyan-400">Étudiant</option>
                             </select>
 
-                            {/* Delete User */}
+                            {/* Button Delete User (ila kan 3andek fl-code, gha-tlqah hna qbel tsedd </td>) */}
                             <button
                               onClick={() => handleDeleteUser(user.id)}
                               className="p-2 bg-red-500/10 hover:bg-red-500/25 border border-red-500/20 hover:border-red-500/40 text-red-400 rounded-lg transition-all"
                               title="Supprimer l'utilisateur"
                             >
-                              <Trash2 size={14} />
+                              <Trash2 size={16} />
                             </button>
                           </td>
                         </tr>
@@ -777,7 +1086,7 @@ const AdminDashboard = () => {
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              
+
               {/* Configuration Générale */}
               <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl space-y-5">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-white/5 pb-3">
@@ -788,8 +1097,8 @@ const AdminDashboard = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Nom de la plateforme</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       defaultValue="EduTrack"
                       className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-cyan-500 focus:outline-none text-white text-sm transition-all"
                     />
@@ -797,8 +1106,8 @@ const AdminDashboard = () => {
 
                   <div>
                     <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Email de contact système</label>
-                    <input 
-                      type="email" 
+                    <input
+                      type="email"
                       defaultValue="contact@edutrack.ma"
                       className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-cyan-500 focus:outline-none text-white text-sm transition-all"
                     />
@@ -831,11 +1140,11 @@ const AdminDashboard = () => {
                           Inactif
                         </span>
                       )}
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         checked={maintenanceMode}
                         onChange={handleMaintenanceToggle}
-                        className="w-5 h-5 rounded border-slate-700 bg-slate-900 focus:ring-cyan-500 cursor-pointer accent-cyan-400" 
+                        className="w-5 h-5 rounded border-slate-700 bg-slate-900 focus:ring-cyan-500 cursor-pointer accent-cyan-400"
                       />
                     </div>
                   </div>
@@ -844,7 +1153,7 @@ const AdminDashboard = () => {
 
               {/* Sécurité & Backups */}
               <div className="space-y-6">
-                
+
                 {/* Database Backups Card */}
                 <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl space-y-4">
                   <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-white/5 pb-3">
@@ -862,8 +1171,8 @@ const AdminDashboard = () => {
                         <p className="text-xs text-slate-400">Aujourd'hui à 18:30 (Automatique)</p>
                       </div>
                     </div>
-                    
-                    <button 
+
+                    <button
                       onClick={handleBackup}
                       disabled={isBackingUp}
                       className="px-4 py-2.5 bg-cyan-500/10 hover:bg-cyan-500/20 disabled:bg-slate-800 disabled:text-slate-500 text-cyan-400 border border-cyan-500/20 hover:border-cyan-500/40 disabled:border-transparent rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5"
@@ -941,7 +1250,7 @@ const AdminDashboard = () => {
                   </h3>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    
+
                     {/* Laravel Service */}
                     <div className="p-3 bg-white/[0.02] border border-white/5 rounded-xl flex flex-col items-center justify-center text-center">
                       <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400 mb-2">

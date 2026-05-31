@@ -85,9 +85,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('admin')->middleware('role:admin')->group(function () {
         Route::get('/stats', [App\Http\Controllers\Api\AdminController::class, 'getStats']);
         Route::get('/users', [App\Http\Controllers\Api\AdminController::class, 'getUsers']);
+        Route::post('/users', [App\Http\Controllers\Api\AdminController::class, 'createUser']);
         Route::put('/users/{id}/role', [App\Http\Controllers\Api\AdminController::class, 'updateUserRole']);
-        Route::delete('/users/{id}', [App\Http\Controllers\Api\AdminController::class, 'destroyUser']);
+        Route::delete('/users/{id}', [App\Http\Controllers\Api\AdminController::class, 'deleteUser']);
         
+        // Bulk import
+        Route::post('/filieres/import', [App\Http\Controllers\Api\AdminController::class, 'importFilieres']);
+        Route::post('/groupes/import', [App\Http\Controllers\Api\AdminController::class, 'importGroupes']);
+        Route::post('/users/import', [App\Http\Controllers\Api\AdminController::class, 'importUsers']);
+
         // System Backups (Maroua Features)
         Route::get('/backups', [App\Http\Controllers\Api\AdminController::class, 'getBackups']);
         Route::post('/backups/generate', [App\Http\Controllers\Api\AdminController::class, 'generateBackup']);
