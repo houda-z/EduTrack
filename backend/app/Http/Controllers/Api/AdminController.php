@@ -50,6 +50,8 @@ class AdminController extends Controller
             'role' => 'required|in:etudiant,enseignant,admin',
             'telephone' => 'nullable|string',
             'annee' => 'nullable|string',
+            'bio' => 'nullable|string',
+            'specialite' => 'nullable|string',
             'filiere_id' => 'required_if:role,etudiant|nullable|exists:filieres,id',
             'groupe_id' => 'required_if:role,etudiant|nullable|exists:groupes,id',
         ]);
@@ -67,6 +69,8 @@ class AdminController extends Controller
             // Save relations properly using IDs
             'filiere_id' => $request->role === 'etudiant' ? $request->filiere_id : null,
             'groupe_id' => $request->role === 'etudiant' ? $request->groupe_id : null,
+            // store bio or use specialite as fallback for formateurs
+            'bio' => $request->bio ?? $request->specialite ?? null,
         ]);
 
         return response()->json([

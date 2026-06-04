@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 
 import Home from './pages/Home';
 import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
 import DashboardEtudiant from './pages/dashboard/DashboardEtudiant';
 import EtudiantLayout from './components/layout/EtudiantLayout';
 import MesCours from './pages/dashboard/MesCours';
@@ -37,7 +36,6 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
 
           {/* Espace Étudiant — Avec Layout Sci-Fi */}

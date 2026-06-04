@@ -57,6 +57,16 @@ const AdminDashboard = () => {
     role: 'etudiant', filiere_id: '', groupe_id: '',
     telephone: '', annee: ''
   });
+  const [showCreateEtudiant, setShowCreateEtudiant] = useState(false);
+  const [showCreateFormateur, setShowCreateFormateur] = useState(false);
+  const [newEtudiant, setNewEtudiant] = useState({
+    prenom: '', name: '', email: '', password: '',
+    filiere_id: '', groupe_id: '', telephone: '', annee: ''
+  });
+  const [newFormateur, setNewFormateur] = useState({
+    prenom: '', name: '', email: '', password: '',
+    specialite: '', telephone: '', bio: ''
+  });
   const [importedCredentials, setImportedCredentials] = useState([]);
   const [importRole, setImportRole] = useState('etudiant');
 
@@ -378,6 +388,54 @@ const AdminDashboard = () => {
       if (res.data.credentials) {
         setImportedCredentials(prev => [...prev, res.data.credentials]);
       }
+    } catch (err) {
+      setFormError(err.response?.data?.message || 'Erreur lors de la création.');
+    }
+  };
+
+  const handleCreateEtudiant = async () => {
+    setFormError('');
+    setFormSuccess('');
+    if (!newEtudiant.prenom || !newEtudiant.name || !newEtudiant.email || !newEtudiant.password) {
+      setFormError('Veuillez remplir tous les champs obligatoires.');
+      return;
+    }
+    if (!newEtudiant.filiere_id || !newEtudiant.groupe_id) {
+      setFormError('La filière et le groupe sont obligatoires pour un étudiant.');
+      return;
+    }
+    try {
+      await axios.post('http://localhost:8000/api/admin/users', {
+        ...newEtudiant,
+        role: 'etudiant',
+        filiere_id: parseInt(newEtudiant.filiere_id),
+        groupe_id: parseInt(newEtudiant.groupe_id),
+      }, getAuthConfig());
+      setShowCreateEtudiant(false);
+      setNewEtudiant({ prenom: '', name: '', email: '', password: '', filiere_id: '', groupe_id: '', telephone: '', annee: '' });
+      fetchUsers();
+      setFormSuccess('Compte étudiant créé avec succès !');
+    } catch (err) {
+      setFormError(err.response?.data?.message || 'Erreur lors de la création.');
+    }
+  };
+
+  const handleCreateFormateur = async () => {
+    setFormError('');
+    setFormSuccess('');
+    if (!newFormateur.prenom || !newFormateur.name || !newFormateur.email || !newFormateur.password) {
+      setFormError('Veuillez remplir tous les champs obligatoires.');
+      return;
+    }
+    try {
+      await axios.post('http://localhost:8000/api/admin/users', {
+        ...newFormateur,
+        role: 'enseignant',
+      }, getAuthConfig());
+      setShowCreateFormateur(false);
+      setNewFormateur({ prenom: '', name: '', email: '', password: '', specialite: '', telephone: '', bio: '' });
+      fetchUsers();
+      setFormSuccess('Compte formateur créé avec succès !');
     } catch (err) {
       setFormError(err.response?.data?.message || 'Erreur lors de la création.');
     }
@@ -977,95 +1035,184 @@ const AdminDashboard = () => {
                 <h2 className="text-3xl font-bold text-indigo-300">🎓 Gestion des Utilisateurs</h2>
                 <p className="text-slate-400 text-sm mt-1">Supervisez et modifiez les rôles et permissions des comptes enregistrés.</p>
               </header>
-              <button
-                onClick={() => { setShowCreateUser(true); fetchFilieres(); fetchGroupes(); }}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-600 rounded-xl text-sm font-bold"
-              >
-                <Plus size={16} /> Créer un utilisateur
-              </button>
+              <div className="flex gap-3">
+                <button onClick={() => { setShowCreateEtudiant(true); setShowCreateFormateur(false); fetchFilieres(); fetchGroupes(); }}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-600 rounded-xl text-sm font-bold">
+                  <Plus size={16} /> + Étudiant
+                </button>
+                <button onClick={() => { setShowCreateFormateur(true); setShowCreateEtudiant(false); fetchFilieres(); fetchGroupes(); }}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-cyan-600 rounded-xl text-sm font-bold">
+                  <Plus size={16} /> + Formateur
+                </button>
+              </div>
             </div>
-
-            {/* Create User Form */}
-            {showCreateUser && (
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-white">Créer un utilisateur</h3>
-                  <button onClick={() => setShowCreateUser(false)} className="text-slate-400 hover:text-white">✕</button>
+            {/* Student creation form */}
+            {showCreateEtudiant && (
+              <div className="bg-white/5 border border-cyan-500/20 rounded-2xl p-6 mb-6">
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h3 className="font-bold text-white text-lg">🎓 Créer un Compte Étudiant</h3>
+                    <p className="text-slate-400 text-xs mt-1">Tous les champs marqués * sont obligatoires</p>
+                  </div>
+                  <button onClick={() => setShowCreateEtudiant(false)} className="text-slate-400 hover:text-white text-xl">✕</button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
-                    <label className="text-xs text-slate-400 uppercase font-bold">Prénom *</label>
-                    <input value={newUser.prenom} onChange={e => setNewUser({ ...newUser, prenom: e.target.value })}
-                      className="w-full mt-1 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500" />
+                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Prénom *</label>
+                    <input value={newEtudiant.prenom}
+                      onChange={e => setNewEtudiant({...newEtudiant, prenom: e.target.value})}
+                      placeholder="Ahmed"
+                      className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500" />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400 uppercase font-bold">Nom *</label>
-                    <input value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })}
-                      className="w-full mt-1 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500" />
+                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Nom *</label>
+                    <input value={newEtudiant.name}
+                      onChange={e => setNewEtudiant({...newEtudiant, name: e.target.value})}
+                      placeholder="Alaoui"
+                      className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500" />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400 uppercase font-bold">Email *</label>
-                    <input type="email" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })}
-                      className="w-full mt-1 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500" />
+                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Email *</label>
+                    <input type="email" value={newEtudiant.email}
+                      onChange={e => setNewEtudiant({...newEtudiant, email: e.target.value})}
+                      placeholder="ahmed.alaoui@email.com"
+                      className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500" />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400 uppercase font-bold">Rôle *</label>
-                    <select value={newUser.role} onChange={e => setNewUser({ ...newUser, role: e.target.value })}
-                      className="w-full mt-1 px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500">
-                      <option value="etudiant">Étudiant</option>
-                      <option value="enseignant">Enseignant</option>
-                      <option value="admin">Admin</option>
+                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Mot de passe *</label>
+                    <input type="password" value={newEtudiant.password}
+                      onChange={e => setNewEtudiant({...newEtudiant, password: e.target.value})}
+                      placeholder="Minimum 6 caractères"
+                      className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Filière *</label>
+                    <select value={newEtudiant.filiere_id}
+                      onChange={e => setNewEtudiant({...newEtudiant, filiere_id: e.target.value, groupe_id: ''})}
+                      className="w-full px-3 py-2.5 bg-slate-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500">
+                      <option value="">Sélectionner une filière...</option>
+                      {filieres.map(f => <option key={f.id} value={f.id}>{f.nom}</option>)}
                     </select>
                   </div>
-                  
-                  {newUser.role === 'etudiant' && (
-                    <>
-                      <div>
-                        <label className="text-xs text-slate-400 uppercase font-bold">Filière</label>
-                        <select value={newUser.filiere_id} onChange={e => setNewUser({ ...newUser, filiere_id: e.target.value, groupe_id: '' })}
-                          className="w-full mt-1 px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500">
-                          <option value="">Choisir une filière...</option>
-                          {filieres.map(f => <option key={f.id} value={f.id}>{f.nom}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-xs text-slate-400 uppercase font-bold">Groupe</label>
-                        <select value={newUser.groupe_id} onChange={e => setNewUser({ ...newUser, groupe_id: e.target.value })}
-                          className="w-full mt-1 px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500"
-                          disabled={!newUser.filiere_id}>
-                          <option value="">Choisir un groupe...</option>
-                          {groupes.filter(g => g.filiere_id === parseInt(newUser.filiere_id)).map(g => (
-                            <option key={g.id} value={g.id}>{g.nom}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </>
-                  )}
                   <div>
-                    <label className="text-xs text-slate-400 uppercase font-bold">Téléphone</label>
-                    <input value={newUser.telephone} onChange={e => setNewUser({ ...newUser, telephone: e.target.value })}
-                      className="w-full mt-1 px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500" />
+                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Groupe *</label>
+                    <select value={newEtudiant.groupe_id}
+                      onChange={e => setNewEtudiant({...newEtudiant, groupe_id: e.target.value})}
+                      disabled={!newEtudiant.filiere_id}
+                      className="w-full px-3 py-2.5 bg-slate-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500 disabled:opacity-50">
+                      <option value="">Sélectionner un groupe...</option>
+                      {groupes.filter(g => g.filiere_id === parseInt(newEtudiant.filiere_id)).map(g => (
+                        <option key={g.id} value={g.id}>{g.nom}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
-                    <label className="text-xs text-slate-400 uppercase font-bold">Année</label>
-                    <select value={newUser.annee} onChange={e => setNewUser({ ...newUser, annee: e.target.value })}
-                      className="w-full mt-1 px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500">
+                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Téléphone</label>
+                    <input value={newEtudiant.telephone}
+                      onChange={e => setNewEtudiant({...newEtudiant, telephone: e.target.value})}
+                      placeholder="0600000000"
+                      className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Année</label>
+                    <select value={newEtudiant.annee}
+                      onChange={e => setNewEtudiant({...newEtudiant, annee: e.target.value})}
+                      className="w-full px-3 py-2.5 bg-slate-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500">
                       <option value="">Non spécifiée</option>
                       <option value="1ère année">1ère année</option>
                       <option value="2ème année">2ème année</option>
                     </select>
                   </div>
                 </div>
-
-                <div className="flex justify-end gap-3 mt-6">
-                  <button onClick={() => setShowCreateUser(false)}
-                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-bold hover:bg-white/10 transition-all">
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-white/5">
+                  <button onClick={() => setShowCreateEtudiant(false)}
+                    className="px-5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm font-bold hover:bg-white/10 transition-all">
                     Annuler
                   </button>
-                  <button onClick={handleCreateUser}
-                    className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-indigo-600 rounded-xl text-sm font-bold transition-all">
-                    Créer l'utilisateur
+                  <button onClick={async () => {
+                      // delegate to handler below
+                      await handleCreateEtudiant();
+                    }}
+                    className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 rounded-xl text-sm font-bold transition-all flex items-center gap-2">
+                    <Plus size={14} /> Créer le compte étudiant
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Formateur creation form */}
+            {showCreateFormateur && (
+              <div className="bg-white/5 border border-emerald-500/20 rounded-2xl p-6 mb-6">
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h3 className="font-bold text-white text-lg">👨‍🏫 Créer un Compte Formateur</h3>
+                    <p className="text-slate-400 text-xs mt-1">Tous les champs marqués * sont obligatoires</p>
+                  </div>
+                  <button onClick={() => setShowCreateFormateur(false)} className="text-slate-400 hover:text-white text-xl">✕</button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Prénom *</label>
+                    <input value={newFormateur.prenom}
+                      onChange={e => setNewFormateur({...newFormateur, prenom: e.target.value})}
+                      placeholder="Mohammed"
+                      className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Nom *</label>
+                    <input value={newFormateur.name}
+                      onChange={e => setNewFormateur({...newFormateur, name: e.target.value})}
+                      placeholder="Benali"
+                      className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Email *</label>
+                    <input type="email" value={newFormateur.email}
+                      onChange={e => setNewFormateur({...newFormateur, email: e.target.value})}
+                      placeholder="m.benali@edutrack.com"
+                      className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Mot de passe *</label>
+                    <input type="password" value={newFormateur.password}
+                      onChange={e => setNewFormateur({...newFormateur, password: e.target.value})}
+                      placeholder="Minimum 6 caractères"
+                      className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Téléphone</label>
+                    <input value={newFormateur.telephone}
+                      onChange={e => setNewFormateur({...newFormateur, telephone: e.target.value})}
+                      placeholder="0600000000"
+                      className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Spécialité</label>
+                    <input value={newFormateur.specialite}
+                      onChange={e => setNewFormateur({...newFormateur, specialite: e.target.value})}
+                      placeholder="ex: Développement Web, DevOps..."
+                      className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500" />
+                  </div>
+                  <div className="md:col-span-2 lg:col-span-3">
+                    <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Biographie / Description</label>
+                    <textarea value={newFormateur.bio}
+                      onChange={e => setNewFormateur({...newFormateur, bio: e.target.value})}
+                      placeholder="Brève description du formateur, ses compétences et son expérience..."
+                      rows={3}
+                      className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 resize-none" />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-white/5">
+                  <button onClick={() => setShowCreateFormateur(false)}
+                    className="px-5 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm font-bold hover:bg-white/10 transition-all">
+                    Annuler
+                  </button>
+                  <button onClick={async () => { await handleCreateFormateur(); }}
+                    className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-cyan-600 hover:from-emerald-400 hover:to-cyan-500 rounded-xl text-sm font-bold transition-all flex items-center gap-2">
+                    <Plus size={14} /> Créer le compte formateur
                   </button>
                 </div>
               </div>
