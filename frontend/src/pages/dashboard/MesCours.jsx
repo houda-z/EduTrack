@@ -50,45 +50,61 @@ const getStudentDownloadUrl = (file, coursId) => {
  * Priorité : API authentifiée (fiable) puis lien Laravel ?download=1
  */
 const triggerStudentDownload = async (file, coursId, event) => {
-    event?.preventDefault();
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
 
     const filename = getStudentDownloadFilename(file);
+    console.log(`Starting download for: ${filename} (ID: ${file?.id}, Cours: ${coursId})`);
 
+    // Priority 1: Authenticated API Download (Best for protected files)
     if (file?.id && coursId) {
         try {
             const response = await api.get(`/cours/${coursId}/fichiers/${file.id}/download`, {
                 responseType: 'blob',
+                timeout: 30000 // 30s timeout for large files
             });
 
-            const blob = new Blob([response.data]);
+            const blob = new Blob([response.data], { type: response.headers['content-type'] });
             const blobUrl = window.URL.createObjectURL(blob);
+            
             const link = document.createElement('a');
             link.href = blobUrl;
-            link.download = filename;
+            link.setAttribute('download', filename);
             link.style.display = 'none';
             document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(blobUrl);
+            
+            // Cleanup
+            setTimeout(() => {
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(blobUrl);
+            }, 100);
+            
             return;
         } catch (err) {
-            console.warn('Téléchargement API échoué, repli sur URL directe:', err);
+            console.error('API Download failed, trying direct URL fallback:', err);
         }
     }
 
+    // Priority 2: Direct Laravel Storage URL with ?download=1
     const directUrl = getStudentDownloadUrl(file, coursId);
-    if (!directUrl) {
-        alert('Impossible de télécharger ce fichier : URL introuvable.');
-        return;
+    if (directUrl) {
+        const link = document.createElement('a');
+        link.href = directUrl;
+        link.setAttribute('download', filename);
+        link.target = '_blank'; // Opens in new tab if browser blocks direct download
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        
+        setTimeout(() => {
+            document.body.removeChild(link);
+        }, 100);
+    } else {
+        alert('Erreur: Impossible de localiser le fichier pour le téléchargement.');
     }
-
-    const link = document.createElement('a');
-    link.href = directUrl;
-    link.download = filename;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
 };
 
 /** URL d'affichage (PDF dans un nouvel onglet, sans forcer le téléchargement) */

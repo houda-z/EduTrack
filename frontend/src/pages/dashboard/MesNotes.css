@@ -1,160 +1,210 @@
-.grades-container {
-    padding: 20px;
+/* MesNotes.css - Premium Glassmorphic Theme */
+
+.notes-dashboard {
+    padding: 32px;
     animation: fadeIn 0.8s ease-out;
+    color: #fff;
+    min-height: 100vh;
 }
 
-.summary-section {
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 1. Metric Cards Row */
+.metrics-row {
     display: grid;
-    grid-template-columns: 350px 1fr;
-    gap: 30px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
     margin-bottom: 40px;
 }
 
-.average-card {
-    padding: 30px;
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(34, 211, 238, 0.1));
-    border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    text-align: center;
-    backdrop-filter: blur(10px);
-}
-
-.avg-header {
+.metric-card {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 15px;
-    color: #94a3b8;
+    text-align: center;
+    transition: all 0.4s ease;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
-.avg-value {
-    font-size: 4rem;
-    font-weight: 900;
-    color: #fff;
-    text-shadow: 0 0 20px rgba(34, 211, 238, 0.4);
+.metric-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(34, 211, 238, 0.3);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(34, 211, 238, 0.1);
 }
 
-.avg-rank {
-    font-size: 0.9rem;
-    color: #22d3ee;
-    font-weight: 600;
-}
-
-.stats-mini-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.mini-stat {
-    background: rgba(15, 23, 42, 0.4);
-    padding: 20px;
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+.metric-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(34, 211, 238, 0.1);
+    border-radius: 12px;
     display: flex;
     align-items: center;
-    gap: 20px;
+    justify-content: center;
+    margin-bottom: 16px;
+    color: #22d3ee;
 }
 
-.mini-stat .label {
-    display: block;
-    font-size: 0.8rem;
-    color: #64748b;
-}
-
-.mini-stat .value {
-    font-size: 1.5rem;
+.metric-label {
+    font-size: 0.85rem;
     font-weight: 800;
-    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #94a3b8;
+    margin-bottom: 8px;
 }
 
+.metric-value {
+    font-size: 2rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #fff, #22d3ee);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* 2. Grades Table Container */
 .grades-table-container {
-    background: rgba(15, 23, 42, 0.3);
-    border-radius: 24px;
-    padding: 30px;
+    background: rgba(30, 41, 59, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(16px);
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
 }
 
 .table-header {
+    margin-bottom: 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
 }
 
 .table-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
 }
 
-.semester-badge {
-    padding: 6px 15px;
-    background: rgba(34, 211, 238, 0.1);
-    color: #22d3ee;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 700;
-}
-
-.grades-table {
+/* 3. Styled Table */
+.custom-grades-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0 12px;
 }
 
-.grades-table th {
+.custom-grades-table th {
+    padding: 16px 20px;
     text-align: left;
-    padding: 15px;
+    font-size: 0.75rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 2px;
     color: #64748b;
-    font-size: 0.8rem;
+    border: none;
+}
+
+.custom-grades-table tr {
+    transition: all 0.3s ease;
+}
+
+.grade-row {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.grade-row:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: scale(1.005);
+}
+
+.custom-grades-table td {
+    padding: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.custom-grades-table td:first-child {
+    border-left: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 12px 0 0 12px;
+}
+
+.custom-grades-table td:last-child {
+    border-right: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 0 12px 12px 0;
+}
+
+/* 4. Badges & Accents */
+.badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 1px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: inline-block;
 }
 
-.grades-table td {
-    padding: 20px 15px;
-    color: #cbd5e1;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+.badge-valide {
+    background: rgba(34, 211, 238, 0.1);
+    color: #22d3ee;
+    border: 1px solid rgba(34, 211, 238, 0.2);
+    box-shadow: 0 0 15px rgba(34, 211, 238, 0.1);
 }
 
-.module-name {
-    font-weight: 700;
-    color: #fff;
+.badge-encours {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
-.grade-value {
-    font-size: 1.2rem;
+.score-text {
     font-weight: 900;
+    color: #22d3ee;
+    font-size: 1.1rem;
 }
 
-.grade-value.pass { color: #22d3ee; text-shadow: 0 0 10px rgba(34, 211, 238, 0.3); }
-.grade-value.fail { color: #f43f5e; }
-
-.status-pill {
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
+.secondary-text {
+    color: #64748b;
+    font-size: 0.8rem;
 }
 
-.status-pill.valid { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-.status-pill.review { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-
-.glass-glow {
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-    transition: 0.3s;
+/* 5. Loading State */
+.loading-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
 }
 
-.glass-glow:hover {
-    border-color: rgba(34, 211, 238, 0.3);
-    box-shadow: 0 0 30px rgba(34, 211, 238, 0.1);
+.premium-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(34, 211, 238, 0.1);
+    border-top: 4px solid #22d3ee;
+    border-radius: 50%;
+    animation: rotate 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.1);
 }
 
-.text-cyan { color: #22d3ee; }
-.text-purple { color: #a855f7; }
-.text-green { color: #10b981; }
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .metrics-row {
+        grid-template-columns: 1fr;
+    }
+}

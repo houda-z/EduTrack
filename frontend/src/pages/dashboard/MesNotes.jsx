@@ -1,160 +1,158 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, FileText, Award, Target, Info } from 'lucide-react';
+import { Award, BookOpen, Clock, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
 import './MesNotes.css';
 
 const MesNotes = () => {
-    const [examNotes, setExamNotes] = useState([]);
-    const [manualNotes, setManualNotes] = useState([]);
-    const [moyenne, setMoyenne] = useState(0);
+    const [grades, setGrades] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [stats, setStats] = useState({
+        moyenneGenerale: 0,
+        modulesValides: 0,
+        examensRestants: 0
+    });
 
     useEffect(() => {
-        fetchNotes();
-    }, []);
+        const fetchGrades = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                // Endpoint placeholder based on user requirement
+                const response = await api.get('/student/grades');
+                
+                if (response.data && response.data.success) {
+                    const fetchedGrades = response.data.data;
+                    setGrades(fetchedGrades);
+                    
+                    // Calculate quick stats
+                    const totalMoyenne = fetchedGrades.length > 0
+                        ? fetchedGrades.reduce((acc, curr) => acc + (curr.moyenne || 0), 0) / fetchedGrades.length
+                        : 0;
+                    
+                    const valides = fetchedGrades.filter(g => g.statut === 'Validé').length;
+                    const restants = fetchedGrades.filter(g => g.statut === 'En cours').length;
 
-    const fetchNotes = async () => {
-        setLoading(true);
-        setError(null);
-
-        try {
-            const user = JSON.parse(localStorage.getItem('user'));
-            if (!user || !user.id) {
-                setError('Données utilisateur non disponibles');
-                setExamNotes([]);
-                setManualNotes([]);
-                setLoading(false);
-                return;
-            }
-
-            const response = await api.get(`/notes/etudiant/${user.id}`);
-            if (response.data && response.data.success && response.data.data) {
-                const data = response.data.data;
-                if (Array.isArray(data)) {
-                    setExamNotes([]);
-                    setManualNotes(data);
-                    setMoyenne(user.moyenne ?? 0);
+                    setStats({
+                        moyenneGenerale: totalMoyenne,
+                        modulesValides: valides,
+                        examensRestants: restants
+                    });
                 } else {
-                    setExamNotes(data.exam_notes || []);
-                    setManualNotes(data.manual_notes || []);
-                    setMoyenne(data.moyenne || 0);
+                    setGrades([]);
                 }
-            } else {
-                setExamNotes([]);
-                setManualNotes([]);
-                setMoyenne(0);
+            } catch (err) {
+                console.error('Failed to fetch grades:', err);
+                setError('Impossible de récupérer vos notes. Veuillez réessayer plus tard.');
+                // Fallback for demonstration if API is not ready (optional, but keeping it clean as per requirement)
+                setGrades([]);
+            } finally {
+                setLoading(false);
             }
-        } catch (err) {
-            console.error('Error fetching notes:', err);
-            setError('Erreur lors du chargement des notes');
-            setExamNotes([]);
-            setManualNotes([]);
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
 
-    const formatDate = (dateString) => {
-        if (!dateString) return '';
-        try {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('fr-FR', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-        } catch {
-            return dateString;
-        }
-    };
+        fetchGrades();
+    }, []);
 
     if (loading) {
         return (
-            <div style={{ color: 'white', textAlign: 'center', padding: '50px' }}>
-                <div style={{ width: 40, height: 40, border: '4px solid rgba(34,211,238,0.2)', borderTop: '4px solid cyan', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }}></div>
-                Chargement de vos notes...
+            <div className="loading-screen">
+                <div className="premium-spinner"></div>
+                <p style={{ marginTop: '20px', color: '#94a3b8', fontWeight: '500' }}>Analyse de vos performances...</p>
             </div>
         );
     }
 
     return (
-        <div className="grades-container">
+        <div className="notes-dashboard">
             {error && (
-                <div style={{ padding: '16px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', color: '#fca5a5', marginBottom: '20px' }}>
-                    {error}
+                <div className="error-alert" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '16px', borderRadius: '12px', marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '12px', color: '#fca5a5' }}>
+                    <AlertCircle size={20} />
+                    <span>{error}</span>
                 </div>
             )}
 
-            <div className="summary-section">
-                <div className="average-card glass-glow">
-                    <div className="avg-header">
-                        <Award size={30} className="text-purple" />
-                        <span>Moyenne Générale</span>
+            {/* Metrics Row */}
+            <div className="metrics-row">
+                <div className="metric-card">
+                    <div className="metric-icon">
+                        <Award size={24} />
                     </div>
-                    <div className="avg-value">{moyenne.toFixed(2)}</div>
-                    <div className="avg-rank">Calcul basé sur vos évaluations</div>
+                    <span className="metric-label">Moyenne Générale</span>
+                    <span className="metric-value">{stats.moyenneGenerale.toFixed(2)}</span>
                 </div>
 
-                <div className="stats-mini-grid">
-                    <div className="mini-stat glass-glow">
-                        <Target className="text-cyan" />
-                        <div>
-                            <span className="label">Évaluations</span>
-                            <span className="value">{examNotes.length + manualNotes.length}</span>
-                        </div>
+                <div className="metric-card">
+                    <div className="metric-icon" style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1' }}>
+                        <BookOpen size={24} />
                     </div>
+                    <span className="metric-label">Modules Validés</span>
+                    <span className="metric-value">{stats.modulesValides}</span>
+                </div>
+
+                <div className="metric-card">
+                    <div className="metric-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
+                        <Clock size={24} />
+                    </div>
+                    <span className="metric-label">Examens Restants</span>
+                    <span className="metric-value">{stats.examensRestants}</span>
                 </div>
             </div>
 
-            {examNotes.length + manualNotes.length === 0 ? (
-                <div style={{ color: '#94a3b8', textAlign: 'center', padding: '40px 20px' }}>
-                    <p style={{ fontSize: '16px', fontWeight: 'bold' }}>Aucune note disponible</p>
-                    <p style={{ fontSize: '13px', marginTop: '8px' }}>Vos notes apparaîtront ici une fois évaluées.</p>
+            {/* Main Table Section */}
+            <div className="grades-table-container">
+                <div className="table-header">
+                    <h2 className="table-title">Détail des Évaluations</h2>
+                    <span className="secondary-text">Dernière mise à jour: Aujourd'hui</span>
                 </div>
-            ) : (
-                <>
-                    <div className="notes-section glass-glow">
-                        <h3 className="section-title">Notes des Examens</h3>
-                        {examNotes.length === 0 ? (
-                            <p className="empty">Aucune note d'examen disponible.</p>
-                        ) : examNotes.map((note, i) => (
-                            <div key={i} className="note-card">
-                                <div className="note-info">
-                                    <span className="note-titre">{note.examen_titre}</span>
-                                    <span className="note-date">{formatDate(note.created_at)}</span>
-                                </div>
-                                <div className="note-score">
-                                    <span className={note.note >= note.total_points * 0.5 ? 'score-good' : 'score-bad'}>
-                                        {note.note} / {note.total_points}
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
 
-                    <div className="notes-section glass-glow">
-                        <h3 className="section-title">Notes Manuelles</h3>
-                        {manualNotes.length === 0 ? (
-                            <p className="empty">Aucune note manuelle.</p>
-                        ) : manualNotes.map((note, i) => (
-                            <div key={i} className="note-card">
-                                <div className="note-info">
-                                    <span className="note-titre">{note.examen_titre || note.cours_titre || 'Note'}</span>
-                                    {note.commentaire && <span className="note-comment">{note.commentaire}</span>}
-                                </div>
-                                <div className="note-score">
-                                    <span className="score-good">{note.note} / 20</span>
-                                </div>
-                            </div>
-                        ))}
+                {grades.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>
+                        <p>Aucune donnée de notation disponible pour le moment.</p>
                     </div>
-                </>
-            )}
-
-            <div className="info-box-cyber">
-                <Info size={18} />
-                <p>Les notes sont mises à jour en temps réel après évaluation par les formateurs.</p>
+                ) : (
+                    <table className="custom-grades-table">
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Formateur</th>
+                                <th>Contrôle</th>
+                                <th>Examen</th>
+                                <th>Moyenne</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {grades.map((grade, index) => (
+                                <tr key={index} className="grade-row">
+                                    <td>
+                                        <div style={{ fontWeight: '800', color: '#fff' }}>{grade.module}</div>
+                                        <div className="secondary-text">Semestre 1</div>
+                                    </td>
+                                    <td>{grade.formateur}</td>
+                                    <td>
+                                        <span className="score-text">{grade.controle ?? '--'}</span>
+                                        <span className="secondary-text">/20</span>
+                                    </td>
+                                    <td>
+                                        <span className="score-text">{grade.examen ?? '--'}</span>
+                                        <span className="secondary-text">/20</span>
+                                    </td>
+                                    <td>
+                                        <div style={{ fontWeight: '900', color: '#fff', fontSize: '1.2rem' }}>
+                                            {grade.moyenne ? grade.moyenne.toFixed(2) : '--'}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span className={`badge ${grade.statut === 'Validé' ? 'badge-valide' : 'badge-encours'}`}>
+                                            {grade.statut}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
             </div>
         </div>
     );
