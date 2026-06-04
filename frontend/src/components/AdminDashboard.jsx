@@ -35,15 +35,18 @@ const AdminDashboard = () => {
   const [filieres, setFilieres] = useState([]);
   const [groupes, setGroupes] = useState([]);
   const [users, setUsers] = useState([]);
+  const [modules, setModules] = useState([]);
 
   // Loaders for each section
   const [filiereLoading, setFiliereLoading] = useState(false);
   const [groupeLoading, setGroupeLoading] = useState(false);
   const [userLoading, setUserLoading] = useState(false);
+  const [moduleLoading, setModuleLoading] = useState(false);
 
   // Forms states
   const [newFiliere, setNewFiliere] = useState({ nom: '', description: '' });
   const [newGroupe, setNewGroupe] = useState({ nom: '', filiere_id: '' });
+  const [newModule, setNewModule] = useState({ nom: '', code: '', filiere_id: '' });
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
 
@@ -133,6 +136,9 @@ const AdminDashboard = () => {
       fetchFilieres(); // Needed for group creation dropdown
     } else if (activeTab === 'Gestion Utilisateurs') {
       fetchUsers();
+    } else if (activeTab === 'Gestion Modules') {
+      fetchModules();
+      fetchFilieres();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
@@ -234,6 +240,49 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error('Erreur suppression groupe:', err);
       alert('Impossible de supprimer le groupe.');
+    }
+  };
+
+  // --- Modules API calls ---
+  const fetchModules = async () => {
+    try {
+      setModuleLoading(true);
+      const res = await axios.get('http://localhost:8000/api/admin/modules', getAuthConfig());
+      const data = res.data?.data || res.data;
+      setModules(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Erreur fetch modules:', err);
+      setModules([]);
+    } finally {
+      setModuleLoading(false);
+    }
+  };
+
+  const handleCreateModule = async (e) => {
+    e.preventDefault();
+    setFormError('');
+    setFormSuccess('');
+    if (!newModule.nom || !newModule.code || !newModule.filiere_id) {
+      setFormError('Tous les champs sont requis.');
+      return;
+    }
+    try {
+      const res = await axios.post('http://localhost:8000/api/admin/modules', newModule, getAuthConfig());
+      setModules([res.data.data, ...modules]);
+      setNewModule({ nom: '', code: '', filiere_id: '' });
+      setFormSuccess('Module créé avec succès !');
+    } catch (err) {
+      setFormError(err.response?.data?.message || 'Erreur création module.');
+    }
+  };
+
+  const handleDeleteModule = async (id) => {
+    if (!window.confirm('Supprimer ce module ?')) return;
+    try {
+      await axios.delete(`http://localhost:8000/api/admin/modules/${id}`, getAuthConfig());
+      setModules(modules.filter(m => m.id !== id));
+    } catch (err) {
+      alert('Impossible de supprimer le module.');
     }
   };
 
@@ -363,6 +412,7 @@ const AdminDashboard = () => {
     { label: 'Vue générale', icon: <LayoutDashboard size={20} /> },
     { label: 'Gestion Filières', icon: <BookOpen size={20} /> },
     { label: 'Gestion Groupes', icon: <Users size={20} /> },
+    { label: 'Gestion Modules', icon: <BookOpen size={20} /> },
     { label: 'Gestion Utilisateurs', icon: <GraduationCap size={20} /> },
     { label: 'Paramètres', icon: <Settings size={20} /> }
   ];
@@ -812,6 +862,99 @@ const AdminDashboard = () => {
                                 className="p-2 bg-red-500/10 hover:bg-red-500/25 border border-red-500/20 hover:border-red-500/40 text-red-400 rounded-lg transition-all"
                                 title="Supprimer le groupe"
                               >
+                                <Trash2 size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- Tab: Gestion Modules --- */}
+        {activeTab === 'Gestion Modules' && (
+          <div className="space-y-6">
+            <header>
+              <h2 className="text-3xl font-bold text-emerald-300">📚 Gestion des Modules</h2>
+              <p className="text-slate-400 text-sm mt-1">Créez et gérez les modules de formation par filière.</p>
+            </header>
+
+            {formError && <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm font-semibold flex items-center gap-2"><AlertTriangle size={16} />{formError}</div>}
+            {formSuccess && <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-sm font-semibold">{formSuccess}</div>}
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Form */}
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl h-fit">
+                <h3 className="text-lg font-bold mb-4 text-white">Ajouter un Module</h3>
+                <form onSubmit={handleCreateModule} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Nom du Module *</label>
+                    <input type="text" placeholder="ex: Développement Backend - Laravel"
+                      value={newModule.nom}
+                      onChange={e => setNewModule({...newModule, nom: e.target.value})}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-emerald-500 focus:outline-none text-white text-sm" required />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Code Module *</label>
+                    <input type="text" placeholder="ex: M201"
+                      value={newModule.code}
+                      onChange={e => setNewModule({...newModule, code: e.target.value.toUpperCase()})}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-emerald-500 focus:outline-none text-white text-sm font-mono" required />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Filière *</label>
+                    <select value={newModule.filiere_id}
+                      onChange={e => setNewModule({...newModule, filiere_id: e.target.value})}
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-emerald-500 focus:outline-none text-white text-sm cursor-pointer" required>
+                      <option value="" className="bg-[#0f172a] text-slate-400">Choisir une filière...</option>
+                      {filieres.map(f => <option key={f.id} value={f.id} className="bg-[#0f172a] text-white">{f.nom}</option>)}
+                    </select>
+                  </div>
+                  <button type="submit"
+                    className="w-full py-3 bg-gradient-to-r from-emerald-500 to-cyan-600 hover:from-emerald-400 hover:to-cyan-500 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2">
+                    <Plus size={16} /> Créer le module
+                  </button>
+                </form>
+              </div>
+
+              {/* Table */}
+              <div className="lg:col-span-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl overflow-hidden">
+                <h3 className="text-lg font-bold mb-4 text-white">Modules Actifs</h3>
+                {moduleLoading ? (
+                  <div className="flex items-center justify-center py-20 text-slate-400 gap-2">
+                    <Loader2 className="animate-spin" /><span>Chargement...</span>
+                  </div>
+                ) : modules.length === 0 ? (
+                  <p className="text-center text-slate-500 py-12 text-sm">Aucun module trouvé.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-white/10 text-slate-400 text-xs font-semibold uppercase">
+                          <th className="pb-3 pr-4">Code</th>
+                          <th className="pb-3 pr-4">Nom</th>
+                          <th className="pb-3 pr-4">Filière</th>
+                          <th className="pb-3 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 text-sm">
+                        {modules.map(module => (
+                          <tr key={module.id} className="hover:bg-white/[0.02] transition-colors">
+                            <td className="py-4 pr-4 font-mono text-emerald-400 font-bold">{module.code}</td>
+                            <td className="py-4 pr-4 text-white font-semibold">{module.nom}</td>
+                            <td className="py-4 pr-4">
+                              <span className="px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-xs text-indigo-300">
+                                {module.filiere?.nom || `ID: ${module.filiere_id}`}
+                              </span>
+                            </td>
+                            <td className="py-4 text-right">
+                              <button onClick={() => handleDeleteModule(module.id)}
+                                className="p-2 bg-red-500/10 hover:bg-red-500/25 border border-red-500/20 text-red-400 rounded-lg transition-all" title="Supprimer le module">
                                 <Trash2 size={16} />
                               </button>
                             </td>

@@ -12,97 +12,148 @@ import api from '../../services/api';
 import './ExamenEnLigne.css';
 
 const ExamenEnLigne = () => {
-  const { nom } = useParams();
+  const { nom, id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { examId, examTitre, examDuree } = location.state || {};
 
+  // Safety check for ID injection variants including URL search params and router state.
+  const searchParams = new URLSearchParams(location.search);
+  const queryExamId = searchParams.get('id') || searchParams.get('examId');
+  const examId = id || queryExamId || location.state?.examId || location.state?.id;
+  const { examTitre, examDuree } = location.state || {};
+
+  const normalizeArray = (value) => {
+    if (Array.isArray(value)) return value;
+    if (!value) return [];
+    return Object.values(value).filter((item) => item !== undefined && item !== null);
+  };
+
+  const [examData, setExamData] = useState(null);
+  const [questions, setQuestions] = useState(null);
+  const [parties, setParties] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState((examDuree || 60) * 60);
+  const [timerStarted, setTimerStarted] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [allExamImages, setAllExamImages] = useState([]);
+
   const [titre, setTitre] = useState(examTitre || '');
-  const [questions, setQuestions] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [isBlocked, setIsBlocked] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [timerStarted, setTimerStarted] = useState(false);
-  const [examData, setExamData] = useState(null);
-  const [allExamImages, setAllExamImages] = useState([]);
-  const [parties, setParties] = useState([]);
 
   // Resizable divider state
   const [leftWidth, setLeftWidth] = useState(60); // percentage
   const isDragging = useRef(false);
 
-  // Redirect if no examId
-  useEffect(() => {
+  // Memoize fetch function with useCallback to prevent re-render loop triggers
+  const fetchExam = useCallback(async () => {
     if (!examId) {
-      navigate(`/etudiant/${nom}/examens`);
+      console.error("CRITICAL ERROR: examId parameter is missing or undefined inside the router context.");
+      setQuestions([]);
+      setLoading(false);
+      return;
     }
-  }, [examId, nom, navigate]);
 
-  // Fetch exam questions on mount
-  useEffect(() => {
-    if (!examId) return;
-    const fetchExam = async () => {
-      setLoading(true);
-      try {
-        const sessionCheck = await api.get(`/examens/${examId}/ma-session`).catch(() => null);
-        const existingSession = sessionCheck?.data?.data;
+    setLoading(true);
+    try {
+      console.log("=== FETCHING EXAM DATA FOR ID: " + examId + " ===");
 
-        if (existingSession?.statut === 'soumis' || existingSession?.statut === 'termine' || existingSession?.statut === 'corrige') {
-          navigate(`/etudiant/${nom}/examens`);
-          return;
-        }
+      // 1. Check Session Availability Status Safely
+      const sessionRes = await api.get("/examens/" + examId + "/ma-session").catch((err) => {
+        console.warn("Session data retrieval ignored or unauthorized:", err);
+        return null;
+      });
 
-        if (existingSession?.statut === 'bloque') {
-          setIsBlocked(true);
-          return;
-        }
-
-        const response = await api.get(`/examens/${examId}`);
-        if (response.data && response.data.success) {
-          const exam = response.data.data;
-          setTitre(exam.titre || examTitre || 'Examen en ligne');
-          setExamData(exam);
-
-          const duration = exam.duree_minutes || examDuree || 60;
-          setTimeLeft(duration * 60);
-
-          if (exam.parties && exam.parties.length > 0) {
-            setParties(exam.parties);
-            // Flatten all questions for navigation
-            const allQ = exam.parties.flatMap(p => (p.questions || []).map(q => ({ ...q, partieId: p.id })));
-            setQuestions(allQ);
-          } else {
-            // Fallback: old system without parties
-            setQuestions(exam.questions || []);
-
-            // Collect ALL images from ALL questions once
-            const allImages = [];
-            (exam.questions || []).forEach(q => {
-              if (q.file) {
-                try {
-                  const parsed = JSON.parse(q.file);
-                  if (Array.isArray(parsed)) allImages.push(...parsed);
-                  else if (typeof q.file === 'string' && q.file.startsWith('data:')) allImages.push(q.file);
-                } catch {
-                  if (typeof q.file === 'string' && q.file.startsWith('data:')) allImages.push(q.file);
-                }
-              }
-            });
-            setAllExamImages(allImages);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch exam:', err);
-      } finally {
-        setLoading(false);
-        setTimerStarted(true);
+      const existingSession = sessionRes?.data?.data;
+      if (existingSession?.statut === 'soumis') {
+        console.log("Session already completed. Redirecting out...");
+        navigate(-1);
+        return;
       }
-    };
+      if (existingSession?.statut === 'bloque') {
+        console.log("Student session state is explicitly blocked.");
+        setIsBlocked(true);
+        setQuestions([]);
+        setLoading(false);
+        return;
+      }
+
+      // 2. Load Core Exam Model Payloads
+      const response = await api.get("/examens/" + examId);
+      console.log("Core API Payload Response Received:", response.data);
+
+      if (response.data && response.data.success) {
+        const exam = response.data.data;
+        setExamData(exam);
+        setTimeLeft((exam.duree_minutes || 60) * 60);
+
+        let aggregated = [];
+        const examParties = normalizeArray(exam.parties);
+        const examQuestions = normalizeArray(exam.questions);
+
+        // A. Extract from structural modular layout parts
+        if (examParties.length > 0) {
+          console.log("Parsing sections for questions allocation.");
+          examParties.forEach(partie => {
+            const partieQuestions = normalizeArray(partie.questions);
+            partieQuestions.forEach(q => {
+              aggregated.push({
+                ...q,
+                partieId: partie.id,
+                partieTitre: partie.titre
+              });
+            });
+          });
+          setParties(examParties);
+        }
+
+        // B. Merge direct exam questions (matching the target data state count)
+        if (examQuestions.length > 0) {
+          console.log("Merging root questions into array stream.");
+          examQuestions.forEach(q => {
+            if (!aggregated.some(existing => existing.id === q.id)) {
+              aggregated.push(q);
+            }
+          });
+        }
+
+        console.log("Final Aggregated Target Array Count Evaluated:", aggregated.length);
+        setQuestions(aggregated);
+
+        // Parse layout asset images from all structural modules
+        const allImages = [];
+        examParties.forEach(p => {
+          normalizeArray(p.images).forEach(img => {
+            if (img && img.image) allImages.push(img.image);
+          });
+        });
+        aggregated.forEach(q => {
+          if (q.file) {
+            try {
+              const parsed = JSON.parse(q.file);
+              if (Array.isArray(parsed)) allImages.push(...parsed);
+              else allImages.push(q.file);
+            } catch { allImages.push(q.file); }
+          }
+        });
+        setAllExamImages(allImages);
+      } else {
+        console.error("Payload request succeeded but data object extraction layer failed.");
+        setQuestions([]);
+      }
+    } catch (err) {
+      console.error("Fatal Exception inside fetchExam execution context loop:", err);
+      setQuestions([]);
+    } finally {
+      setLoading(false);
+      setTimerStarted(true);
+    }
+  }, [examId, navigate]);
+
+  useEffect(() => {
     fetchExam();
-  }, [examId, examDuree, examTitre, navigate, nom]);
+  }, [fetchExam]);
 
   // Calculate score and submit
   const handleSubmission = useCallback(async () => {
@@ -121,7 +172,8 @@ const ExamenEnLigne = () => {
     });
 
     try {
-      const response = await api.post(`/examens/${examId}/soumettre`, {
+      const response = await api.post('/student/exams/submit', {
+        examen_id: examId,
         answers: formattedAnswers,
       });
 
@@ -248,14 +300,12 @@ const ExamenEnLigne = () => {
   // ── Guard renders ──────────────────────────────────────────────────────────
   if (!examId) return null;
 
-  if (loading) {
+  if (loading || questions === null) {
     return (
-      <div className="exam-end-screen">
-        <div className="success-card glass-glow">
-          <div className="exam-loading-spinner" />
-          <h2>Chargement de l'examen...</h2>
-          <p style={{ color: '#64748b', marginTop: 8 }}>Récupération des questions en cours</p>
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#0b1329] text-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-emerald-400 mb-4"></div>
+        <p className="text-emerald-400 font-medium tracking-wide">Chargement de l'examen...</p>
+        <p className="text-slate-500 text-xs mt-1">Récupération des questions et des ressources en cours...</p>
       </div>
     );
   }
@@ -296,14 +346,13 @@ const ExamenEnLigne = () => {
   }
 
   // ── Empty state ────────────────────────────────────────────────────────────
-  if (questions.length === 0) {
+  if (Array.isArray(questions) && questions.length === 0) {
     return (
-      <div className="exam-end-screen">
-        <div className="success-card glass-glow">
-          <Terminal size={60} style={{ color: '#64748b', marginBottom: 20 }} />
-          <h2 style={{ color: '#64748b' }}>Aucune question disponible</h2>
-          <p style={{ color: '#475569', marginTop: 8 }}>Cet examen ne contient pas encore de questions.</p>
-          <button className="btn-sci-primary" style={{ marginTop: 30 }} onClick={() => navigate(`/etudiant/${nom}/examens`)}>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#0b1329] text-center p-6 text-white">
+        <div className="bg-white/5 border border-white/10 p-8 rounded-2xl max-w-md w-full shadow-2xl">
+          <h2 className="text-xl font-bold text-red-400 mb-2">Aucune question disponible</h2>
+          <p className="text-slate-400 text-sm mb-6">L'examen est en cours de configuration. Contactez votre formateur.</p>
+          <button onClick={() => navigate(-1)} className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all">
             RETOUR
           </button>
         </div>

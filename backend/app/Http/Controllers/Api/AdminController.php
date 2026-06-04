@@ -94,6 +94,34 @@ class AdminController extends Controller
         return response()->json(['success' => true, 'message' => 'Utilisateur supprimé.']);
     }
 
+    // GET all modules
+    public function getModules() {
+        $modules = \App\Models\Module::with('filiere:id,nom')->orderBy('created_at', 'desc')->get();
+        return response()->json(['success' => true, 'data' => $modules]);
+    }
+
+    // CREATE module
+    public function createModule(Request $request) {
+        $request->validate([
+            'nom' => 'required|string|max:255',
+            'code' => 'required|string|max:50|unique:modules,code',
+            'filiere_id' => 'required|exists:filieres,id',
+        ]);
+        $module = \App\Models\Module::create([
+            'nom' => $request->nom,
+            'code' => $request->code,
+            'filiere_id' => $request->filiere_id,
+        ]);
+        return response()->json(['success' => true, 'data' => $module->load('filiere:id,nom')]);
+    }
+
+    // DELETE module
+    public function deleteModule($id) {
+        \App\Models\Module::findOrFail($id)->delete();
+        return response()->json(['success' => true]);
+    }
+
+
     // System Backups (Maroua Features) - Existing empty stub for context
     public function getBackups() {
         return response()->json([]);

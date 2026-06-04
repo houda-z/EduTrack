@@ -204,9 +204,56 @@ class StudentController extends Controller
 
     public function submitExam(Request $request)
     {
+        $user = auth()->user();
+
+        $validated = $request->validate([
+            'examen_id' => 'required|exists:examens,id',
+            'answers' => 'nullable|array',
+        ]);
+
+        $examenId = $validated['examen_id'];
+        $answers = $validated['answers'] ?? [];
+
+        // Create or update a session record for this student + exam
+        $session = \App\Models\SessionExamen::firstOrCreate(
+            ['etudiant_id' => $user->id, 'examen_id' => $examenId],
+            ['statut' => 'en_cours', 'debut_at' => Carbon::now()]
+        );
+
+        // Persist each answer as ExamenReponse
+        foreach ($answers as $questionId => $answerVal) {
+            // Normalize answer — if numeric, assume choix_qcm_id, else text
+            $data = [
+                'etudiant_id' => $user->id,
+                'examen_id' => $examenId,
+                'question_id' => $questionId,
+            ];
+
+            $update = [];
+            if (is_numeric($answerVal) || (is_string($answerVal) && ctype_digit($answerVal))) {
+                $update['choix_qcm_id'] = (int) $answerVal;
+                $update['reponse_texte'] = null;
+            } else {
+                $update['choix_qcm_id'] = null;
+                $update['reponse_texte'] = is_array($answerVal) ? json_encode($answerVal) : (string) $answerVal;
+            }
+
+            \App\Models\ExamenReponse::updateOrCreate($data, $update + ['note_attribuee' => null]);
+        }
+
+        // Mark session as submitted
+        $session->update([
+            'statut' => 'soumis',
+            'fin_at' => Carbon::now(),
+        ]);
+
         return response()->json([
             'success' => true,
             'message' => 'Examen soumis avec succès.',
+            'data' => [
+                'session_id' => $session->id,
+                'answers_saved' => count($answers),
+            ]
         ]);
     }
 

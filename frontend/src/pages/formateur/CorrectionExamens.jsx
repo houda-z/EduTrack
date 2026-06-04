@@ -163,6 +163,26 @@ const CorrectionExamens = () => {
     }
   };
 
+  const handleExportPDF = async () => {
+    try {
+      const response = await api.get(
+        `/formateur/examens/${selectedExam.id}/etudiants/${selectedStudent.etudiant.id}/export-pdf`,
+        { responseType: 'blob' }
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `correction_${selectedStudent.etudiant.name}_${selectedExam.titre}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export PDF error:', err);
+      alert('Erreur lors de l\'export PDF.');
+    }
+  };
+
   // ==================== RENDER: VIEW 1 ====================
   if (currentView === 'exams') {
     return (
@@ -350,6 +370,12 @@ const CorrectionExamens = () => {
               {selectedExam.titre} • {selectedExam.filiere?.nom} • {selectedExam.groupe?.nom}
             </p>
           </div>
+          <button
+            onClick={() => handleExportPDF()}
+            className="flex items-center gap-2 px-4 py-2 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-300 rounded-xl text-xs font-bold transition-all"
+          >
+            📄 Exporter PDF
+          </button>
         </div>
 
         {/* Reference materials section */}

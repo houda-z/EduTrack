@@ -14,6 +14,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user',    [AuthController::class, 'me']);
 
+    // Student data-fetching endpoints
+    Route::get('/cours', [App\Http\Controllers\Api\CoursController::class, 'index']);
+    Route::get('/examens', [App\Http\Controllers\Api\ExamenController::class, 'index']);
+    Route::get('/examens/{id}', [App\Http\Controllers\Api\ExamenController::class, 'show']);
+    Route::get('/emploi-du-temps', [App\Http\Controllers\Api\EmploiDuTempsController::class, 'index']);
+
     // Filières CRUD Routes
     Route::post('/filieres', [FiliereController::class, 'store'])->middleware('role:admin');
     Route::delete('/filieres/{id}', [FiliereController::class, 'destroy'])->middleware('role:admin');
@@ -39,6 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/formateur/examens-correction', [App\Http\Controllers\Api\ExamenController::class, 'getExamensPourCorrection']);
     Route::get('/formateur/examens/{exam_id}/groupes/{groupe_id}/etudiants', [App\Http\Controllers\Api\ExamenController::class, 'getEtudiantsReponses']);
     Route::get('/formateur/examens/{exam_id}/etudiants', [App\Http\Controllers\Api\ExamenController::class, 'getEtudiantsReponses']);
+    Route::get('/formateur/examens/{exam_id}/etudiants/{etudiant_id}/export-pdf', [App\Http\Controllers\Api\ExamenController::class, 'exportCorrectionPDF']);
     Route::post('/formateur/reponses/noter', [App\Http\Controllers\Api\ExamenController::class, 'noterReponsesQuestion']);
     Route::post('/examens/{id}/bloquer-session', [App\Http\Controllers\Api\ExamenController::class, 'bloquerSession']);
     Route::get('/examens/{id}/ma-session', [App\Http\Controllers\Api\ExamenController::class, 'getMaSession']);
@@ -88,6 +95,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/users', [App\Http\Controllers\Api\AdminController::class, 'createUser']);
         Route::put('/users/{id}/role', [App\Http\Controllers\Api\AdminController::class, 'updateUserRole']);
         Route::delete('/users/{id}', [App\Http\Controllers\Api\AdminController::class, 'deleteUser']);
+        
+        // Modules
+        Route::get('/modules', [App\Http\Controllers\Api\AdminController::class, 'getModules']);
+        Route::post('/modules', [App\Http\Controllers\Api\AdminController::class, 'createModule']);
+        Route::delete('/modules/{id}', [App\Http\Controllers\Api\AdminController::class, 'deleteModule']);
         
         // Bulk import
         Route::post('/filieres/import', [App\Http\Controllers\Api\AdminController::class, 'importFilieres']);

@@ -41,6 +41,7 @@ function App() {
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
 
           {/* Espace Étudiant — Avec Layout Sci-Fi */}
+          <Route path="/etudiant/:nom/en-ligne/:id" element={<ExamenEnLigne />} />
           <Route path="/etudiant/:nom/en-ligne" element={<ExamenEnLigne />} />
 
           <Route path="/etudiant/:nom" element={<EtudiantLayout />}>

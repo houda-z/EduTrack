@@ -343,17 +343,36 @@ class ExamenController extends Controller
     {
         $exam = Examen::with([
             'questions.choix',
+            'parties' => function($q) {
+                $q->orderBy('ordre');
+            },
             'parties.images',
             'parties.tableau',
+            'parties.questions' => function($q) {
+                $q->orderBy('ordre');
+            },
             'parties.questions.choix',
             'filiere:id,nom',
             'groupe:id,nom'
         ])->findOrFail($id);
 
+        // Debugging safeguard: Count total questions found in parties
+        $totalPartieQuestions = 0;
+        if ($exam->parties) {
+            foreach ($exam->parties as $p) {
+                $totalPartieQuestions += $p->questions ? $p->questions->count() : 0;
+            }
+        }
+
         return response()->json([
             'success' => true,
             'data'    => $exam,
-            'message' => 'Examen récupéré.'
+            'debug_info' => [
+                'direct_questions_count' => $exam->questions ? $exam->questions->count() : 0,
+                'parties_count' => $exam->parties ? $exam->parties->count() : 0,
+                'nested_questions_count' => $totalPartieQuestions
+            ],
+            'message' => 'Examen récupéré avec succès avec toutes ses questions et sections.'
         ]);
     }
     public function getResultats($id)
@@ -697,5 +716,57 @@ class ExamenController extends Controller
                 'note_totale' => $totalNotes
             ]
         ]);
+    }
+
+    public function exportCorrectionPDF($exam_id, $etudiant_id) {
+        $user = auth()->user();
+        if ($user->role !== 'enseignant') abort(403);
+        
+        $exam = Examen::with([
+            'questions',
+            'parties.questions.choix',
+            'filiere:id,nom',
+            'groupe:id,nom',
+        ])->findOrFail($exam_id);
+        
+        $etudiant = User::findOrFail($etudiant_id);
+        
+        $session = SessionExamen::where('etudiant_id', $etudiant_id)
+            ->where('examen_id', $exam_id)
+            ->first();
+        
+        $reponses = ExamenReponse::where('etudiant_id', $etudiant_id)
+            ->where('examen_id', $exam_id)
+            ->with(['question.choix', 'choix'])
+            ->get()
+            ->keyBy('question_id');
+        
+        // Get all questions
+        $allQuestions = collect();
+        if ($exam->parties && $exam->parties->count() > 0) {
+            foreach ($exam->parties as $partie) {
+                foreach ($partie->questions as $q) {
+                    $allQuestions->push(['partie' => $partie->titre, 'question' => $q]);
+                }
+            }
+        } else {
+            foreach ($exam->questions as $q) {
+                $allQuestions->push(['partie' => null, 'question' => $q]);
+            }
+        }
+        
+        $noteTotale = $session?->note_totale ?? 0;
+        $totalPoints = $allQuestions->sum(fn($item) => $item['question']->points ?? 1);
+        
+        $html = view('pdf.correction', compact(
+            'exam', 'etudiant', 'session', 'reponses', 
+            'allQuestions', 'noteTotale', 'totalPoints'
+        ))->render();
+        
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html);
+        $pdf->setPaper('A4', 'portrait');
+        
+        $filename = "correction_{$etudiant->name}_{$exam->titre}.pdf";
+        return $pdf->download($filename);
     }
 }
