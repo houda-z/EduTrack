@@ -954,20 +954,20 @@ const AdminDashboard = () => {
                     <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Nom du Module *</label>
                     <input type="text" placeholder="ex: Développement Backend - Laravel"
                       value={newModule.nom}
-                      onChange={e => setNewModule({...newModule, nom: e.target.value})}
+                      onChange={e => setNewModule({ ...newModule, nom: e.target.value })}
                       className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-emerald-500 focus:outline-none text-white text-sm" required />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Code Module *</label>
                     <input type="text" placeholder="ex: M201"
                       value={newModule.code}
-                      onChange={e => setNewModule({...newModule, code: e.target.value.toUpperCase()})}
+                      onChange={e => setNewModule({ ...newModule, code: e.target.value.toUpperCase() })}
                       className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-emerald-500 focus:outline-none text-white text-sm font-mono" required />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Filière *</label>
                     <select value={newModule.filiere_id}
-                      onChange={e => setNewModule({...newModule, filiere_id: e.target.value})}
+                      onChange={e => setNewModule({ ...newModule, filiere_id: e.target.value })}
                       className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:border-emerald-500 focus:outline-none text-white text-sm cursor-pointer" required>
                       <option value="" className="bg-[#0f172a] text-slate-400">Choisir une filière...</option>
                       {filieres.map(f => <option key={f.id} value={f.id} className="bg-[#0f172a] text-white">{f.nom}</option>)}
@@ -1061,35 +1061,35 @@ const AdminDashboard = () => {
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Prénom *</label>
                     <input value={newEtudiant.prenom}
-                      onChange={e => setNewEtudiant({...newEtudiant, prenom: e.target.value})}
+                      onChange={e => setNewEtudiant({ ...newEtudiant, prenom: e.target.value })}
                       placeholder="Ahmed"
                       className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Nom *</label>
                     <input value={newEtudiant.name}
-                      onChange={e => setNewEtudiant({...newEtudiant, name: e.target.value})}
+                      onChange={e => setNewEtudiant({ ...newEtudiant, name: e.target.value })}
                       placeholder="Alaoui"
                       className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Email *</label>
                     <input type="email" value={newEtudiant.email}
-                      onChange={e => setNewEtudiant({...newEtudiant, email: e.target.value})}
+                      onChange={e => setNewEtudiant({ ...newEtudiant, email: e.target.value })}
                       placeholder="ahmed.alaoui@email.com"
                       className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Mot de passe *</label>
                     <input type="password" value={newEtudiant.password}
-                      onChange={e => setNewEtudiant({...newEtudiant, password: e.target.value})}
+                      onChange={e => setNewEtudiant({ ...newEtudiant, password: e.target.value })}
                       placeholder="Minimum 6 caractères"
                       className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Filière *</label>
                     <select value={newEtudiant.filiere_id}
-                      onChange={e => setNewEtudiant({...newEtudiant, filiere_id: e.target.value, groupe_id: ''})}
+                      onChange={e => setNewEtudiant({ ...newEtudiant, filiere_id: e.target.value, groupe_id: '' })}
                       className="w-full px-3 py-2.5 bg-slate-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500">
                       <option value="">Sélectionner une filière...</option>
                       {filieres.map(f => <option key={f.id} value={f.id}>{f.nom}</option>)}
@@ -1098,7 +1098,7 @@ const AdminDashboard = () => {
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Groupe *</label>
                     <select value={newEtudiant.groupe_id}
-                      onChange={e => setNewEtudiant({...newEtudiant, groupe_id: e.target.value})}
+                      onChange={e => setNewEtudiant({ ...newEtudiant, groupe_id: e.target.value })}
                       disabled={!newEtudiant.filiere_id}
                       className="w-full px-3 py-2.5 bg-slate-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500 disabled:opacity-50">
                       <option value="">Sélectionner un groupe...</option>
@@ -1110,14 +1110,14 @@ const AdminDashboard = () => {
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Téléphone</label>
                     <input value={newEtudiant.telephone}
-                      onChange={e => setNewEtudiant({...newEtudiant, telephone: e.target.value})}
+                      onChange={e => setNewEtudiant({ ...newEtudiant, telephone: e.target.value })}
                       placeholder="0600000000"
                       className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Année</label>
                     <select value={newEtudiant.annee}
-                      onChange={e => setNewEtudiant({...newEtudiant, annee: e.target.value})}
+                      onChange={e => setNewEtudiant({ ...newEtudiant, annee: e.target.value })}
                       className="w-full px-3 py-2.5 bg-slate-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500">
                       <option value="">Non spécifiée</option>
                       <option value="1ère année">1ère année</option>
@@ -1131,9 +1131,9 @@ const AdminDashboard = () => {
                     Annuler
                   </button>
                   <button onClick={async () => {
-                      // delegate to handler below
-                      await handleCreateEtudiant();
-                    }}
+                    // delegate to handler below
+                    await handleCreateEtudiant();
+                  }}
                     className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 rounded-xl text-sm font-bold transition-all flex items-center gap-2">
                     <Plus size={14} /> Créer le compte étudiant
                   </button>
@@ -1156,49 +1156,49 @@ const AdminDashboard = () => {
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Prénom *</label>
                     <input value={newFormateur.prenom}
-                      onChange={e => setNewFormateur({...newFormateur, prenom: e.target.value})}
+                      onChange={e => setNewFormateur({ ...newFormateur, prenom: e.target.value })}
                       placeholder="Mohammed"
                       className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Nom *</label>
                     <input value={newFormateur.name}
-                      onChange={e => setNewFormateur({...newFormateur, name: e.target.value})}
+                      onChange={e => setNewFormateur({ ...newFormateur, name: e.target.value })}
                       placeholder="Benali"
                       className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Email *</label>
                     <input type="email" value={newFormateur.email}
-                      onChange={e => setNewFormateur({...newFormateur, email: e.target.value})}
+                      onChange={e => setNewFormateur({ ...newFormateur, email: e.target.value })}
                       placeholder="m.benali@edutrack.com"
                       className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Mot de passe *</label>
                     <input type="password" value={newFormateur.password}
-                      onChange={e => setNewFormateur({...newFormateur, password: e.target.value})}
+                      onChange={e => setNewFormateur({ ...newFormateur, password: e.target.value })}
                       placeholder="Minimum 6 caractères"
                       className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Téléphone</label>
                     <input value={newFormateur.telephone}
-                      onChange={e => setNewFormateur({...newFormateur, telephone: e.target.value})}
+                      onChange={e => setNewFormateur({ ...newFormateur, telephone: e.target.value })}
                       placeholder="0600000000"
                       className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Spécialité</label>
                     <input value={newFormateur.specialite}
-                      onChange={e => setNewFormateur({...newFormateur, specialite: e.target.value})}
+                      onChange={e => setNewFormateur({ ...newFormateur, specialite: e.target.value })}
                       placeholder="ex: Développement Web, DevOps..."
                       className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500" />
                   </div>
                   <div className="md:col-span-2 lg:col-span-3">
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-1">Biographie / Description</label>
                     <textarea value={newFormateur.bio}
-                      onChange={e => setNewFormateur({...newFormateur, bio: e.target.value})}
+                      onChange={e => setNewFormateur({ ...newFormateur, bio: e.target.value })}
                       placeholder="Brève description du formateur, ses compétences et son expérience..."
                       rows={3}
                       className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 resize-none" />
@@ -1227,8 +1227,8 @@ const AdminDashboard = () => {
                 <label className="text-xs text-slate-400 uppercase font-bold block mb-1">
                   1. Choisir le rôle pour cet import:
                 </label>
-                <select 
-                  value={importRole} 
+                <select
+                  value={importRole}
                   onChange={(e) => setImportRole(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-800 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500 cursor-pointer"
                 >
@@ -1322,10 +1322,10 @@ const AdminDashboard = () => {
                           <td className="py-4 pr-4 font-mono text-xs text-slate-400">{user.email}</td>
                           <td className="py-4 pr-4">
                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${user.role === 'admin'
-                                ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                                : user.role === 'enseignant'
-                                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                  : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                              ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                              : user.role === 'enseignant'
+                                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
                               }`}>
                               {user.role}
                             </span>

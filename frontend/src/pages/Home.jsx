@@ -3,12 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import './Home.css';
 
 const Home = () => {
-  
+
   const navigate = useNavigate();
 
   return (
     <div className="home-container">
-      
+
       {/* Navbar */}
       <nav className="navbar">
         <div className="nav-container">
@@ -25,7 +25,7 @@ const Home = () => {
           <div className="badge">✨ Nouveau : Gestion des Examens 2026</div>
           <h1>L'excellence numérique pour <span>EduTrack</span></h1>
           <p>
-            Simplifiez la gestion de votre parcours académique. Une plateforme 
+            Simplifiez la gestion de votre parcours académique. Une plateforme
             conçue pour les étudiants, les professeurs et l'administration.
           </p>
           <div className="hero-actions">
@@ -47,10 +47,10 @@ const Home = () => {
       <footer className="home-footer">
         <p>© 2026 EduTrack • Plateforme de Gestion Académique</p>
       </footer>
-      
+
     </div>
   );
-  
+
 };
 
 export default Home;
