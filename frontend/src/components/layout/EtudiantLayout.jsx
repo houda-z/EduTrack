@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     BookOpen,
     Calendar,
@@ -8,10 +8,10 @@ import {
     Settings,
     LogOut,
     Search,
-    Bell,
     Menu,
     X,
-    LayoutDashboard
+    LayoutDashboard,
+    ChevronDown
 } from 'lucide-react';
 import { Link, useLocation, useParams, Outlet, useNavigate } from 'react-router-dom';
 import './EtudiantLayout.css';
@@ -20,7 +20,35 @@ import api from '../../services/api';
 const EtudiantLayout = () => {
     const { nom } = useParams();
     const location = useLocation();
+    const navigate = useNavigate();
+    const userMenuRef = useRef(null);
+
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [showUserMenu, setShowUserMenu] = useState(false);
+    const [user, setUser] = useState(null);
+
+    // Load user from localStorage
+    useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch (err) {
+                console.error('Error parsing user:', err);
+            }
+        }
+    }, []);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+                setShowUserMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const navItems = [
         { path: `/etudiant/${nom}/dashboard`, icon: <LayoutDashboard size={20} />, label: "Dashboard", end: true },
@@ -33,7 +61,6 @@ const EtudiantLayout = () => {
     ];
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-    const navigate = useNavigate();
 
     const handleLogout = async () => {
         try {
@@ -65,10 +92,8 @@ const EtudiantLayout = () => {
             {/* Sidebar */}
             <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
-                    <div className="logo-box">
-                        <LayoutDashboard size={24} />
-                    </div>
-                    <h2 className="brand-name">Edu<span className="text-cyan">Track</span></h2>
+                    <img src="/Gemini_Generated_Image_z92bi9z92bi9z92b (1) (1).png" alt="EduTrack Logo" className="sidebar-logo" />
+
                     <button className="mobile-close" onClick={toggleSidebar}><X /></button>
                 </div>
 
@@ -116,19 +141,38 @@ const EtudiantLayout = () => {
                     </div>
 
                     <div className="top-bar-right">
-                        <button className="notif-btn">
-                            <Bell size={20} />
-                            <span className="scifi-dot"></span>
-                        </button>
+                        {/* User Menu Dropdown */}
+                        <div className="relative" ref={userMenuRef}>
+                            <button
+                                onClick={() => setShowUserMenu(!showUserMenu)}
+                                className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-white/5 transition-all cursor-pointer"
+                            >
+                                <div className="text-right">
+                                    <p className="text-sm font-bold text-white">{user?.prenom || user?.name || nom || 'Utilisateur'}</p>
+                                    <p className="text-[10px] text-cyan-400 uppercase font-bold tracking-wider">ÉTUDIANT</p>
+                                </div>
+                                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-indigo-600 flex items-center justify-center font-bold text-sm border-2 border-white/20">
+                                    {(user?.prenom || user?.name || nom || 'E')[0].toUpperCase()}
+                                </div>
+                                <ChevronDown size={14} className={`text-slate-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                            </button>
 
-                        <div className="stu-profile-pill">
-                            <div className="stu-info">
-                                <span className="stu-name">{nom || "Utilisateur"}</span>
-                                <span className="stu-role">Étudiant</span>
-                            </div>
-                            <div className="stu-avatar">
-                                <img src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${nom}`} alt="avatar" />
-                            </div>
+                            {/* Dropdown Menu */}
+                            {showUserMenu && (
+                                <div className="absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
+                                    <div className="px-4 py-3 border-b border-white/5">
+                                        <p className="text-xs font-bold text-white truncate">{user?.prenom} {user?.name || nom}</p>
+                                        <p className="text-[10px] text-slate-400 truncate">{user?.email || 'etudiant@edutrack.com'}</p>
+                                    </div>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="w-full flex items-center gap-2 px-4 py-3 text-red-400 hover:bg-red-500/10 transition-all text-sm font-semibold"
+                                    >
+                                        <LogOut size={15} />
+                                        Déconnexion
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </header>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -11,19 +11,32 @@ import {
   Menu,
   X,
   User,
-  Bell,
-  CheckSquare
+  CheckSquare,
+  ChevronDown
 } from 'lucide-react';
 
 const FormateurLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const userMenuRef = useRef(null);
 
   // Load user data from localStorage
   const userString = localStorage.getItem('user');
   const user = userString ? JSON.parse(userString) : { name: 'Professeur', prenom: 'Formateur' };
   const formateurName = `${user.prenom} ${user.name}`;
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -44,7 +57,7 @@ const FormateurLayout = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0f172a] bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white font-sans flex relative overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-[#0f172a] bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white font-sans relative">
 
       {/* Background radial glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none"></div>
@@ -67,13 +80,11 @@ const FormateurLayout = () => {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed md:static inset-y-0 left-0 z-40 w-66 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 bg-white/5 backdrop-blur-xl border-r border-white/10 flex flex-col`}>
+      <aside className={`fixed md:static inset-y-0 left-0 z-40 w-66 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 bg-white/5 backdrop-blur-xl border-r border-white/10 flex flex-col h-screen overflow-y-auto`}>
 
         {/* Brand header */}
         <div className="p-6 flex items-center gap-3 border-b border-white/5">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-400 to-indigo-600 flex items-center justify-center font-extrabold text-lg shadow-[0_0_15px_rgba(34,211,238,0.3)]">
-            ET
-          </div>
+
           <div>
             <h1 className="text-lg font-black tracking-wider bg-gradient-to-r from-white via-cyan-100 to-cyan-300 bg-clip-text text-transparent">EduTrack</h1>
             <span className="text-[10px] text-cyan-400/80 font-bold tracking-widest uppercase">Espace Enseignant</span>
@@ -89,8 +100,8 @@ const FormateurLayout = () => {
                 key={link.path}
                 to={link.path}
                 className={`flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all group ${isActive
-                    ? 'bg-gradient-to-r from-cyan-500/20 to-indigo-500/10 text-cyan-300 border border-cyan-500/30 shadow-[0_0_12px_rgba(34,211,238,0.15)]'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-white border border-transparent'
+                  ? 'bg-gradient-to-r from-cyan-500/20 to-indigo-500/10 text-cyan-300 border border-cyan-500/30 shadow-[0_0_12px_rgba(34,211,238,0.15)]'
+                  : 'text-slate-400 hover:bg-white/5 hover:text-white border border-transparent'
                   }`}
                 onClick={() => setIsSidebarOpen(false)}
               >
@@ -119,26 +130,39 @@ const FormateurLayout = () => {
       <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
 
         {/* Top Header Navigation */}
-        <header className="h-16 border-b border-white/5 backdrop-blur-md bg-[#0f172a]/30 px-6 md:px-10 flex items-center justify-between z-20">
-          <div></div>
-
-          <div className="flex items-center gap-4">
-            {/* Notification bell */}
-            <button className="relative p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-all">
-              <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-cyan-400 rounded-full shadow-[0_0_6px_#22d3ee]"></span>
+        <header className="h-16 border-b border-white/5 backdrop-blur-md bg-[#0f172a]/30 px-6 md:px-10 flex items-center justify-end z-20">
+          {/* User Menu Dropdown */}
+          <div className="relative" ref={userMenuRef}>
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-white/5 transition-all cursor-pointer"
+            >
+              <div className="text-right">
+                <p className="text-sm font-bold text-white">{user?.prenom || user?.name || 'Formateur'}</p>
+                <p className="text-[10px] text-cyan-400 uppercase font-bold tracking-wider">ENSEIGNANT</p>
+              </div>
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-indigo-600 flex items-center justify-center font-bold text-sm border-2 border-white/20">
+                {(user?.prenom || user?.name || 'F')[0].toUpperCase()}
+              </div>
+              <ChevronDown size={14} className={`text-slate-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Profile pill with badge */}
-            <div className="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
-              <div className="flex flex-col text-right hidden sm:flex">
-                <span className="text-[13px] font-bold text-slate-200">{formateurName}</span>
-                <span className="text-[10px] text-cyan-400 font-extrabold tracking-wider uppercase">Enseignant</span>
+            {/* Dropdown Menu */}
+            {showUserMenu && (
+              <div className="absolute right-0 top-full mt-2 w-48 bg-slate-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
+                <div className="px-4 py-3 border-b border-white/5">
+                  <p className="text-xs font-bold text-white truncate">{user?.prenom} {user?.name || 'Formateur'}</p>
+                  <p className="text-[10px] text-slate-400 truncate">{user?.email || 'formateur@edutrack.com'}</p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2 px-4 py-3 text-red-400 hover:bg-red-500/10 transition-all text-sm font-semibold"
+                >
+                  <LogOut size={15} />
+                  Déconnexion
+                </button>
               </div>
-              <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-bold">
-                {user.prenom ? user.prenom[0] : 'F'}
-              </div>
-            </div>
+            )}
           </div>
         </header>
 

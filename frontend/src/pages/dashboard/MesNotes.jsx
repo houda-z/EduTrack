@@ -20,16 +20,16 @@ const MesNotes = () => {
             try {
                 // Endpoint placeholder based on user requirement
                 const response = await api.get('/student/grades');
-                
+
                 if (response.data && response.data.success) {
                     const fetchedGrades = response.data.data;
                     setGrades(fetchedGrades);
-                    
+
                     // Calculate quick stats
                     const totalMoyenne = fetchedGrades.length > 0
                         ? fetchedGrades.reduce((acc, curr) => acc + (curr.moyenne || 0), 0) / fetchedGrades.length
                         : 0;
-                    
+
                     const valides = fetchedGrades.filter(g => g.statut === 'Validé').length;
                     const restants = fetchedGrades.filter(g => g.statut === 'En cours').length;
 
@@ -126,10 +126,18 @@ const MesNotes = () => {
                             {grades.map((grade, index) => (
                                 <tr key={index} className="grade-row">
                                     <td>
-                                        <div style={{ fontWeight: '800', color: '#fff' }}>{grade.module}</div>
+                                        <div style={{ fontWeight: '800', color: '#fff' }}>
+                                            {typeof grade.module === 'object' && grade.module?.nom ? grade.module.nom : grade.module}
+                                        </div>
                                         <div className="secondary-text">Semestre 1</div>
                                     </td>
-                                    <td>{grade.formateur}</td>
+                                    <td>
+                                        {typeof grade.formateur === 'object' && grade.formateur?.name
+                                            ? grade.formateur.name
+                                            : (typeof grade.formateur === 'object' && grade.formateur?.prenom
+                                                ? `${grade.formateur.prenom} ${grade.formateur.name || ''}`
+                                                : grade.formateur)}
+                                    </td>
                                     <td>
                                         <span className="score-text">{grade.controle ?? '--'}</span>
                                         <span className="secondary-text">/20</span>

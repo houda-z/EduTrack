@@ -1,10 +1,10 @@
 .etudiant-layout {
     display: flex;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
     background: #050a15;
     color: #f8fafc;
     font-family: 'Outfit', sans-serif;
-    overflow-x: hidden;
 }
 
 /* Sidebar Styling */
@@ -17,10 +17,12 @@
     flex-direction: column;
     padding: 20px;
     height: 100vh;
+    overflow-y: auto;
     position: sticky;
     top: 0;
     z-index: 1000;
     transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    flex-shrink: 0;
 }
 
 .sidebar-closed .sidebar {
@@ -35,6 +37,14 @@
     align-items: center;
     gap: 12px;
     margin-bottom: 30px;
+}
+
+.sidebar-logo {
+    width: 180px;
+    height: 90px;
+    object-fit: contain;
+    border-radius: 12px;
+    flex-shrink: 0;
 }
 
 .logo-box {
@@ -55,7 +65,9 @@
     letter-spacing: 0.5px;
 }
 
-.text-cyan { color: #22d3ee; }
+.text-cyan {
+    color: #22d3ee;
+}
 
 .sidebar-nav {
     display: flex;
@@ -140,6 +152,8 @@
     flex-direction: column;
     padding: 20px;
     position: relative;
+    height: 100vh;
+    overflow-y: auto;
 }
 
 .top-bar-stu {
@@ -194,54 +208,22 @@
     gap: 20px;
 }
 
-.notif-btn {
-    background: rgba(15, 23, 42, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #94a3b8;
-    padding: 10px;
-    border-radius: 12px;
-    position: relative;
-    cursor: pointer;
-}
-
-.scifi-dot {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 6px;
-    height: 6px;
-    background: #22d3ee;
-    border-radius: 50%;
-    box-shadow: 0 0 10px #22d3ee;
-}
-
-.stu-profile-pill {
-    background: rgba(30, 41, 59, 0.5);
-    padding: 5px 5px 5px 20px;
-    border-radius: 50px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
 .stu-info {
     display: flex;
     flex-direction: column;
 }
 
-.stu-name { font-size: 0.9rem; font-weight: 700; color: #fff; }
-.stu-role { font-size: 0.7rem; color: #22d3ee; text-transform: uppercase; }
-
-.stu-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 2px solid #8b5cf6;
+.stu-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #fff;
 }
 
-.stu-avatar img { width: 100%; height: 100%; }
+.stu-role {
+    font-size: 0.7rem;
+    color: #22d3ee;
+    text-transform: uppercase;
+}
 
 .glass-inner-content {
     flex: 1;
@@ -251,13 +233,32 @@
     border-radius: 20px;
     padding: 20px;
     overflow-y: auto;
+    min-height: 0;
 }
 
-.mobile-close { display: none; }
+.mobile-close {
+    display: none;
+}
 
 @media (max-width: 1024px) {
-    .sidebar { position: fixed; height: 100vh; transform: translateX(-100%); }
-    .sidebar.open { transform: translateX(0); }
-    .search-box-stu { display: none; }
-    .mobile-close { display: block; background: none; border: none; color: #fff; }
+    .sidebar {
+        position: fixed;
+        height: 100vh;
+        transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .search-box-stu {
+        display: none;
+    }
+
+    .mobile-close {
+        display: block;
+        background: none;
+        border: none;
+        color: #fff;
+    }
 }
